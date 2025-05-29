@@ -6,6 +6,7 @@ import tech.mogami.java.client.helper.X402PaymentHelper;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static tech.mogami.commons.constant.BlockchainConstants.BLOCKCHAIN_ADDRESS_PREFIX;
 import static tech.mogami.commons.constant.StablecoinConstants.USDC;
 import static tech.mogami.commons.constant.X402Constants.X402_SUPPORTED_VERSION;
 import static tech.mogami.commons.constant.networks.BaseNetworks.BASE_SEPOLIA;
@@ -13,6 +14,7 @@ import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EX
 import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
 import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 import static tech.mogami.commons.test.BaseTestData.TEST_ASSET_CONTRACT_ADDRESS;
+import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1;
 import static tech.mogami.commons.test.BaseTestData.TEST_PAYMENT_REQUIREMENTS_HEADER;
 import static tech.mogami.commons.test.BaseTestData.TEST_SERVER_WALLET_ADDRESS_1;
 import static tech.mogami.commons.test.BaseTestData.TEST_SERVER_WALLET_ADDRESS_2;
@@ -64,6 +66,38 @@ public class X402PaymentHelperTest {
                                 assertThat(pr.extra().size()).isEqualTo(0);
                             });
                     assertThat(payment.error()).isEqualTo("Payment required");
+                });
+    }
+
+    @Test
+    @DisplayName("getPayloadFromPaymentRequirements")
+    public void testGetPayloadFromPaymentRequirements() {
+        // Getting a specific payment requirements payload.
+        var paymentRequirements1 = X402PaymentHelper
+                .getPaymentRequiredFromHeader(TEST_PAYMENT_REQUIREMENTS_HEADER)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No payment requirements found"));
+
+        assertThat(X402PaymentHelper.getPayloadFromPaymentRequirements(
+                TEST_CLIENT_WALLET_ADDRESS_1,
+                paymentRequirements1.accepts().getFirst()
+        )).satisfies(paymentPayload -> {
+                    assertThat(paymentPayload.x402Version()).isEqualTo(X402_SUPPORTED_VERSION);
+                    assertThat(paymentPayload.scheme()).isEqualTo(EXACT_SCHEME_NAME);
+                    assertThat(paymentPayload.network()).isEqualTo(BASE_SEPOLIA);
+                    assertThat(paymentPayload.payload())
+                            .isInstanceOfSatisfying(tech.mogami.commons.header.payment.schemes.ExactSchemePayload.class, exactSchemePayload -> {
+                                assertThat(exactSchemePayload.signature()).isNull();
+                                assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
+                                assertThat(exactSchemePayload.authorization().to()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_1);
+                                assertThat(exactSchemePayload.authorization().value()).isEqualTo("1000");
+                                // TODO Test validAfter & validBefore on values.
+                                assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
+                                assertThat(exactSchemePayload.authorization().validBefore()).isNotEmpty();
+                                assertThat(exactSchemePayload.authorization().nonce()).isNotEmpty();
+                                assertThat(exactSchemePayload.authorization().nonce()).startsWith(BLOCKCHAIN_ADDRESS_PREFIX);
+                            });
                 });
     }
 
