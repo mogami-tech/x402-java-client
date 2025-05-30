@@ -22,7 +22,7 @@ import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EX
  * Utility class for EIP-712 related operations.
  */
 @UtilityClass
-@SuppressWarnings("unused")
+@SuppressWarnings({"magicnumber", "HideUtilityClassConstructor", "unused"})
 public class EIP712Helper {
 
     /** ObjectMapper instance for JSON operations. */
@@ -100,16 +100,16 @@ public class EIP712Helper {
      * @param sig the SignatureData object to convert
      * @return the hexadecimal string representation of the signature
      */
-    private static String toHex(Sign.SignatureData sig) {
+    private static String toHex(final Sign.SignatureData sig) {
         byte[] v = sig.getV();
         int vValue = v[0];
         if (vValue != 27 && vValue != 28) {
             vValue = vValue + 27;
         }
-        return "0x" +
-                Numeric.toHexStringNoPrefixZeroPadded(new BigInteger(1, sig.getR()), 64) +
-                Numeric.toHexStringNoPrefixZeroPadded(new BigInteger(1, sig.getS()), 64) +
-                String.format("%02x", vValue);
+        return "0x"
+                + Numeric.toHexStringNoPrefixZeroPadded(new BigInteger(1, sig.getR()), 64)
+                + Numeric.toHexStringNoPrefixZeroPadded(new BigInteger(1, sig.getS()), 64)
+                + String.format("%02x", vValue);
     }
 
 }

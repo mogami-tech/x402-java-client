@@ -2,6 +2,7 @@ package tech.mogami.java.client.helper;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.api.facilitator.settle.SettleResponse;
@@ -22,6 +23,8 @@ import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EX
 /**
  * This class provides helper methods for handling X402 payments.
  */
+@UtilityClass
+@SuppressWarnings({"HideUtilityClassConstructor", "unused"})
 public class X402PaymentHelper {
 
     /**
@@ -48,8 +51,8 @@ public class X402PaymentHelper {
      * @return A PaymentPayload object containing the payment details.
      */
     public static PaymentPayload getPayloadFromPaymentRequirements(
-            String signature,
-            @NonNull String fromAddress,
+            final String signature,
+            @NonNull final String fromAddress,
             @NonNull final PaymentRequirements paymentRequirements
     ) {
         if (paymentRequirements.scheme().equals(EXACT_SCHEME_NAME)) {
