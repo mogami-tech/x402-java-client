@@ -4,10 +4,12 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.crypto.Credentials;
+import tech.mogami.commons.api.facilitator.settle.SettleResponse;
 import tech.mogami.commons.header.payment.PaymentPayload;
 import tech.mogami.commons.header.payment.PaymentRequired;
 import tech.mogami.commons.header.payment.PaymentRequirements;
 import tech.mogami.commons.header.payment.schemes.ExactSchemePayload;
+import tech.mogami.commons.util.Base64Util;
 import tech.mogami.commons.util.JsonUtil;
 import tech.mogami.commons.util.NonceUtil;
 
@@ -23,12 +25,12 @@ import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EX
 public class X402PaymentHelper {
 
     /**
-     * Parses the X-Payment header and returns a PaymentRequired object.
+     * Parses the X-Payment body and returns a PaymentRequired object.
      *
      * @param xPaymentHeader The value of the X-Payment header.
      * @return A PaymentRequired object containing the parsed payment requirements.
      */
-    public static Optional<PaymentRequired> getPaymentRequiredFromHeader(final String xPaymentHeader) {
+    public static Optional<PaymentRequired> getPaymentRequiredFromBody(final String xPaymentHeader) {
         if (StringUtils.isEmpty(xPaymentHeader)) {
             // If the header is empty, it means no payment is required.
             return Optional.empty();
@@ -46,7 +48,7 @@ public class X402PaymentHelper {
      * @return A PaymentPayload object containing the payment details.
      */
     public static PaymentPayload getPayloadFromPaymentRequirements(
-            @NonNull String signature,
+            String signature,
             @NonNull String fromAddress,
             @NonNull final PaymentRequirements paymentRequirements
     ) {
@@ -95,6 +97,31 @@ public class X402PaymentHelper {
         return paymentPayload.toBuilder()
                 .payload(payload)
                 .build();
+    }
+
+    /**
+     * Encodes the PaymentPayload into a Base64 string to be used as X-PAYMENT header.
+     *
+     * @param paymentPayload The PaymentPayload to encode.
+     * @return A Base64 encoded string representation of the PaymentPayload.
+     */
+    public static String getPayloadHeader(@NonNull final PaymentPayload paymentPayload) {
+        return Base64Util.encode(JsonUtil.toJson(paymentPayload));
+    }
+
+    /**
+     * Decodes the X-PAYMENT-RESPONSE header and returns a SettleResponse object.
+     *
+     * @param xPaymentResponseHeader The Base64 encoded X-PAYMENT-RESPONSE header.
+     * @return A SettleResponse object if the header is not empty, otherwise null.
+     */
+    public static Optional<SettleResponse> getSettleResponseFromHeader(final String xPaymentResponseHeader) {
+        if (StringUtils.isEmpty(xPaymentResponseHeader)) {
+            // If the header is empty, it means no payment was settled.
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(JsonUtil.fromJson(Base64Util.decode(xPaymentResponseHeader), SettleResponse.class));
+        }
     }
 
 }

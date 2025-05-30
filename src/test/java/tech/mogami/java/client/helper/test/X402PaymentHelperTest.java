@@ -28,14 +28,14 @@ import static tech.mogami.commons.test.BaseTestData.TEST_SERVER_WALLET_ADDRESS_2
 public class X402PaymentHelperTest {
 
     @Test
-    @DisplayName("getPaymentRequiredFromHeader()")
+    @DisplayName("getPaymentRequiredFromBody()")
     public void testSetPaymentRequiredFromHeader() {
         // Test when the header is null or empty.
-        assertTrue(X402PaymentHelper.getPaymentRequiredFromHeader(null).isEmpty());
-        assertTrue(X402PaymentHelper.getPaymentRequiredFromHeader("").isEmpty());
+        assertTrue(X402PaymentHelper.getPaymentRequiredFromBody(null).isEmpty());
+        assertTrue(X402PaymentHelper.getPaymentRequiredFromBody("").isEmpty());
 
         // Test with a valid JSON string from the X-Payment header.
-        assertThat(X402PaymentHelper.getPaymentRequiredFromHeader(TEST_PAYMENT_REQUIREMENTS_HEADER))
+        assertThat(X402PaymentHelper.getPaymentRequiredFromBody(TEST_PAYMENT_REQUIREMENTS_HEADER))
                 .isPresent()
                 .get()
                 .satisfies(payment -> {
@@ -79,7 +79,7 @@ public class X402PaymentHelperTest {
     public void testGetPayloadFromPaymentRequirements() {
         // Getting a specific payment requirements payload.
         var paymentRequirements1 = X402PaymentHelper
-                .getPaymentRequiredFromHeader(TEST_PAYMENT_REQUIREMENTS_HEADER)
+                .getPaymentRequiredFromBody(TEST_PAYMENT_REQUIREMENTS_HEADER)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No payment requirements found"));
@@ -158,6 +158,56 @@ public class X402PaymentHelperTest {
                                 assertThat(exactSchemePayload.authorization().nonce()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().nonce()).startsWith(BLOCKCHAIN_ADDRESS_PREFIX);
                             });
+                });
+    }
+
+    @Test
+    @DisplayName("getPayloadHeader()")
+    public void testGetPayloadHeader() {
+        var expectedXPaymentHeader = "eyJ4NDAyVmVyc2lvbiI6MSwic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiYmFzZS1zZXBvbGlhIiwicGF5bG9hZCI6eyJzaWduYXR1cmUiOiIweGRkY2Y4N2JiYjg3ZTRmMDU5Zjg4M2Y2YzFlNzZlOTg0OWQzNzNlMDlhNzM0NTgwY2U5MmY1YTA2ODIxYTJiOTk1YzdkMGQ2NzhkODI0MDY4NjAxMWJhNTc0MWNiZjU5ZDMzM2UyYWQ2ZjI1NTk3MWUyYjI0ZWIxMDdhY2E3OWE3MWMiLCJhdXRob3JpemF0aW9uIjp7ImZyb20iOiIweDI5ODBiYzI0YkJGQjM0REUxQkJDOTE0NzlDYjcxMmZmYkNFMDJGNzMiLCJ0byI6IjB4NzU1M0Y2RkE0RmI2Mjk4NmI2NGY3OWFFRmExZkI5M2VhNjRBMjJiMSIsInZhbHVlIjoiMTAwMCIsInZhbGlkQWZ0ZXIiOiIxNzQ4NTU0NjI5IiwidmFsaWRCZWZvcmUiOiIxNzQ4NTU0NzQ5Iiwibm9uY2UiOiIweDE3NjgwNTgxMzQ4ZmRmZjllOWM5ZDc1MTI0ZDJmMjdkZjgwNTAyZWRmYzFlNTAyYzNiMTRhODk2MTVkY2VmNDYifX19";
+        var paymentPayload = PaymentPayload.builder()
+                .x402Version(X402_SUPPORTED_VERSION)
+                .scheme(EXACT_SCHEME_NAME)
+                .network(BASE_SEPOLIA.name())
+                .payload(ExactSchemePayload.builder()
+                        .signature("0xddcf87bbb87e4f059f883f6c1e76e9849d373e09a734580ce92f5a06821a2b995c7d0d678d8240686011ba5741cbf59d333e2ad6f255971e2b24eb107aca79a71c")
+                        .authorization(ExactSchemePayload.Authorization.builder()
+                                .from("0x2980bc24bBFB34DE1BBC91479Cb712ffbCE02F73")
+                                .to("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1")
+                                .value("1000")
+                                .validAfter("1748554629")
+                                .validBefore("1748554749")
+                                .nonce("0x17680581348fdff9e9c9d75124d2f27df80502edfc1e502c3b14a89615dcef46")
+                                .build()
+                        )
+                        .build()
+                )
+                .build();
+
+        // We test base64 result.
+        assertThat(X402PaymentHelper.getPayloadHeader(paymentPayload))
+                .isEqualTo(expectedXPaymentHeader);
+    }
+
+    @Test
+    @DisplayName("getSettleResponseFromHeader() with null payload")
+    public void testGetSettleResponseFromHeader() {
+        // Test with empty values.
+        assertTrue(X402PaymentHelper.getSettleResponseFromHeader(null).isEmpty());
+        assertTrue(X402PaymentHelper.getSettleResponseFromHeader("").isEmpty());
+
+        var encodedSettleResponse = "eyJzdWNjZXNzIjp0cnVlLCJuZXR3b3JrIjoiYmFzZS1zZXBvbGlhIiwidHJhbnNhY3Rpb24iOiIweDI5YWEzYzdhMDgyNzRlNmRmZjY2Yzc5YjFiMDg2ZDQzM2MyYWI5Yzg1MDUxZWNlZTAyNGIwNTMxYjIyOTQ0ZGUiLCJlcnJvclJlYXNvbiI6bnVsbCwicGF5ZXIiOiIweDI5ODBiYzI0YkJGQjM0REUxQkJDOTE0NzlDYjcxMmZmYkNFMDJGNzMifQ";
+
+        // We test the settle response header.
+        assertThat(X402PaymentHelper.getSettleResponseFromHeader(encodedSettleResponse))
+                .isPresent()
+                .get()
+                .satisfies(settleResponse -> {
+                    assertThat(settleResponse.success()).isTrue();
+                    assertThat(settleResponse.network()).isEqualTo(BASE_SEPOLIA.name());
+                    assertThat(settleResponse.transaction()).isEqualTo("0x29aa3c7a08274e6dff66c79b1b086d433c2ab9c85051ecee024b0531b22944de");
+                    assertThat(settleResponse.errorReason()).isNull();
+                    assertThat(settleResponse.payer()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
                 });
     }
 

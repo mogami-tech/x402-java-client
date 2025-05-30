@@ -23,7 +23,7 @@ public class EIP712HelperTest {
 
     @Test
     @DisplayName("EIP-712 sign Test")
-    public void sign() throws Exception {
+    public void testSign() throws Exception {
         /*
         {
           "x402Version": 1,
