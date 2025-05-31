@@ -8,7 +8,7 @@
     <!-- Project information -->
     <groupId>tech.mogami.java.client</groupId>
     <artifactId>mogami-x402-java-client</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
     <name>Mogami Java x402 client - Retrieve payment information and pay</name>
     <description>Mogami Java x402 client - Retrieve payment information and pay</description>
@@ -67,6 +67,10 @@
         <!-- Libraries releases -->
         <lombok.version>1.18.38</lombok.version>
 
+        <!-- Crypto libraries -->
+        <web3j.crypto.version>4.14.0</web3j.crypto.version>
+        <web3j.utils.version>4.14.0</web3j.utils.version>
+
         <!-- Tests -->
         <junit-jupiter-engine.version>5.12.2</junit-jupiter-engine.version>
         <assertj.version>3.27.3</assertj.version>
@@ -96,7 +100,7 @@
         <dependency>
             <groupId>tech.mogami.commons</groupId>
             <artifactId>mogami-x402-commons</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.4</version>
         </dependency>
 
         <dependency>
@@ -106,6 +110,16 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>crypto</artifactId>
+            <version>${web3j.crypto.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>utils</artifactId>
+            <version>${web3j.utils.version}</version>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -127,6 +141,32 @@
     <build>
         <!-- Plugins -->
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyle.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${maven.puppycrawl.checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <consoleOutput>true</consoleOutput>
+                    <configLocation>https://mogami.tech/shared/checkstyle.xml</configLocation>
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>warning</violationSeverity>
+                </configuration>
+            </plugin>
             <!-- Tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
