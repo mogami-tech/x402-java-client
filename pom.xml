@@ -72,12 +72,12 @@
         <web3j.utils.version>4.14.0</web3j.utils.version>
 
         <!-- Tests -->
-        <junit-jupiter-engine.version>5.12.2</junit-jupiter-engine.version>
+        <junit-jupiter-engine.version>5.13.0</junit-jupiter-engine.version>
         <assertj.version>3.27.3</assertj.version>
 
         <!-- Maven -->
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
-        <maven.puppycrawl.checkstyle.version>10.24.0</maven.puppycrawl.checkstyle.version>
+        <maven.puppycrawl.checkstyle.version>10.25.0</maven.puppycrawl.checkstyle.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
