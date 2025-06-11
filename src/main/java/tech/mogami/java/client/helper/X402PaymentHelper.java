@@ -6,10 +6,11 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.api.facilitator.settle.SettleResponse;
+import tech.mogami.commons.crypto.signature.EIP712Helper;
 import tech.mogami.commons.header.payment.PaymentPayload;
 import tech.mogami.commons.header.payment.PaymentRequired;
 import tech.mogami.commons.header.payment.PaymentRequirements;
-import tech.mogami.commons.header.payment.schemes.ExactSchemePayload;
+import tech.mogami.commons.header.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.commons.util.Base64Util;
 import tech.mogami.commons.util.JsonUtil;
 import tech.mogami.commons.util.NonceUtil;
@@ -17,8 +18,8 @@ import tech.mogami.commons.util.NonceUtil;
 import java.time.Instant;
 import java.util.Optional;
 
-import static tech.mogami.commons.constant.X402Constants.X402_SUPPORTED_VERSION;
-import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EXACT_SCHEME_NAME;
+import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
+import static tech.mogami.commons.header.payment.schemes.Schemes.EXACT_SCHEME;
 
 /**
  * This class provides helper methods for handling X402 payments.
@@ -55,10 +56,10 @@ public class X402PaymentHelper {
             @NonNull final String fromAddress,
             @NonNull final PaymentRequirements paymentRequirements
     ) {
-        if (paymentRequirements.scheme().equals(EXACT_SCHEME_NAME)) {
+        if (paymentRequirements.scheme().equals(EXACT_SCHEME.name())) {
             return PaymentPayload.builder()
-                    .x402Version(X402_SUPPORTED_VERSION)
-                    .scheme(EXACT_SCHEME_NAME)
+                    .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
+                    .scheme(EXACT_SCHEME.name())
                     .network(paymentRequirements.network())
                     .payload(ExactSchemePayload.builder()
                             .signature(signature)
