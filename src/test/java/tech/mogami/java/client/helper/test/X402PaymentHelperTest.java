@@ -5,18 +5,18 @@ import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.header.payment.PaymentPayload;
 import tech.mogami.commons.header.payment.PaymentRequirements;
-import tech.mogami.commons.header.payment.schemes.ExactSchemePayload;
+import tech.mogami.commons.header.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.java.client.helper.X402PaymentHelper;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.mogami.commons.constant.BlockchainConstants.BLOCKCHAIN_ADDRESS_PREFIX;
-import static tech.mogami.commons.constant.StablecoinConstants.USDC;
-import static tech.mogami.commons.constant.X402Constants.X402_SUPPORTED_VERSION;
-import static tech.mogami.commons.constant.networks.Networks.BASE_SEPOLIA;
-import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EXACT_SCHEME_NAME;
-import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
-import static tech.mogami.commons.header.payment.schemes.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
+import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
+import static tech.mogami.commons.constant.stablecoin.Stablecoins.USDC;
+import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
+import static tech.mogami.commons.header.payment.schemes.Schemes.EXACT_SCHEME;
+import static tech.mogami.commons.header.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
+import static tech.mogami.commons.header.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 import static tech.mogami.commons.test.BaseTestData.TEST_ASSET_CONTRACT_ADDRESS;
 import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1;
 import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY;
@@ -39,12 +39,12 @@ public class X402PaymentHelperTest {
                 .isPresent()
                 .get()
                 .satisfies(payment -> {
-                    assertThat(payment.x402Version()).isEqualTo(X402_SUPPORTED_VERSION);
+                    assertThat(payment.x402Version()).isEqualTo(X402_SUPPORTED_VERSION_BY_MOGAMI.version());
                     assertThat(payment.accepts().size()).isEqualTo(2);
                     // First payment requirements.
                     assertThat(payment.accepts().getFirst())
                             .satisfies(paymentRequirements -> {
-                                assertThat(paymentRequirements.scheme()).isEqualTo(EXACT_SCHEME_NAME);
+                                assertThat(paymentRequirements.scheme()).isEqualTo(EXACT_SCHEME.name());
                                 assertThat(paymentRequirements.network()).isEqualTo(BASE_SEPOLIA.name());
                                 assertThat(paymentRequirements.maxAmountRequired()).isEqualTo("1000");
                                 assertThat(paymentRequirements.resource()).isEqualTo("http://localhost/weather");
@@ -53,13 +53,13 @@ public class X402PaymentHelperTest {
                                 assertThat(paymentRequirements.payTo()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_1);
                                 assertThat(paymentRequirements.maxTimeoutSeconds()).isEqualTo(60);
                                 assertThat(paymentRequirements.asset()).isEqualTo(TEST_ASSET_CONTRACT_ADDRESS);
-                                assertThat(paymentRequirements.extra().get(EXACT_SCHEME_PARAMETER_NAME)).isEqualTo(USDC);
+                                assertThat(paymentRequirements.extra().get(EXACT_SCHEME_PARAMETER_NAME)).isEqualTo(USDC.name());
                                 assertThat(paymentRequirements.extra().get(EXACT_SCHEME_PARAMETER_VERSION)).isEqualTo("2");
                             });
                     // Second payment requirements.
                     assertThat(payment.accepts().getLast())
                             .satisfies(pr -> {
-                                assertThat(pr.scheme()).isEqualTo(EXACT_SCHEME_NAME);
+                                assertThat(pr.scheme()).isEqualTo(EXACT_SCHEME.name());
                                 assertThat(pr.network()).isEqualTo(BASE_SEPOLIA.name());
                                 assertThat(pr.maxAmountRequired()).isEqualTo("2000");
                                 assertThat(pr.resource()).isEqualTo("http://localhost/weather");
@@ -89,11 +89,11 @@ public class X402PaymentHelperTest {
                 TEST_CLIENT_WALLET_ADDRESS_1,
                 paymentRequirements1.accepts().getFirst()
         )).satisfies(paymentPayload -> {
-            assertThat(paymentPayload.x402Version()).isEqualTo(X402_SUPPORTED_VERSION);
-            assertThat(paymentPayload.scheme()).isEqualTo(EXACT_SCHEME_NAME);
+            assertThat(paymentPayload.x402Version()).isEqualTo(X402_SUPPORTED_VERSION_BY_MOGAMI.version());
+            assertThat(paymentPayload.scheme()).isEqualTo(EXACT_SCHEME.name());
             assertThat(paymentPayload.network()).isEqualTo(BASE_SEPOLIA.name());
             assertThat(paymentPayload.payload())
-                    .isInstanceOfSatisfying(tech.mogami.commons.header.payment.schemes.ExactSchemePayload.class, exactSchemePayload -> {
+                    .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                         assertThat(exactSchemePayload.signature()).isEqualTo("INVALID_SIGNATURE");
                         assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
                         assertThat(exactSchemePayload.authorization().to()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_1);
@@ -113,7 +113,7 @@ public class X402PaymentHelperTest {
         var expectedSignature = "0xde533856d81c76984a8dbc8d563bbb6d6d4ca36ce6c4d6e8cf315de3bfc14ab26d6bcdc37549aeed78bf92e39d5180268f8f399a4ffb816cfbf500823882b6001c";
         var credentials = Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY);
         var paymentRequirements = PaymentRequirements.builder()
-                .scheme(EXACT_SCHEME_NAME)
+                .scheme(EXACT_SCHEME.name())
                 .network(BASE_SEPOLIA.name())
                 .maxAmountRequired("10000")
                 .resource("http://localhost/weather")
@@ -123,8 +123,8 @@ public class X402PaymentHelperTest {
                 .extra(EXACT_SCHEME_PARAMETER_VERSION, "2")
                 .build();
         var paymentPayload = PaymentPayload.builder()
-                .x402Version(X402_SUPPORTED_VERSION)
-                .scheme(EXACT_SCHEME_NAME)
+                .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
+                .scheme(EXACT_SCHEME.name())
                 .network(BASE_SEPOLIA.name())
                 .payload(ExactSchemePayload.builder()
                         .authorization(ExactSchemePayload.Authorization.builder()
@@ -143,8 +143,8 @@ public class X402PaymentHelperTest {
         // We test the signing of the payment payload.
         assertThat(X402PaymentHelper.getSignedPayload(credentials, paymentRequirements, paymentPayload))
                 .satisfies(signedPayload -> {
-                    assertThat(signedPayload.x402Version()).isEqualTo(X402_SUPPORTED_VERSION);
-                    assertThat(signedPayload.scheme()).isEqualTo(EXACT_SCHEME_NAME);
+                    assertThat(signedPayload.x402Version()).isEqualTo(X402_SUPPORTED_VERSION_BY_MOGAMI.version());
+                    assertThat(signedPayload.scheme()).isEqualTo(EXACT_SCHEME.name());
                     assertThat(signedPayload.network()).isEqualTo(BASE_SEPOLIA.name());
                     assertThat(signedPayload.payload())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
@@ -166,8 +166,8 @@ public class X402PaymentHelperTest {
     public void testGetPayloadHeader() {
         var expectedXPaymentHeader = "eyJ4NDAyVmVyc2lvbiI6MSwic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiYmFzZS1zZXBvbGlhIiwicGF5bG9hZCI6eyJzaWduYXR1cmUiOiIweGRkY2Y4N2JiYjg3ZTRmMDU5Zjg4M2Y2YzFlNzZlOTg0OWQzNzNlMDlhNzM0NTgwY2U5MmY1YTA2ODIxYTJiOTk1YzdkMGQ2NzhkODI0MDY4NjAxMWJhNTc0MWNiZjU5ZDMzM2UyYWQ2ZjI1NTk3MWUyYjI0ZWIxMDdhY2E3OWE3MWMiLCJhdXRob3JpemF0aW9uIjp7ImZyb20iOiIweDI5ODBiYzI0YkJGQjM0REUxQkJDOTE0NzlDYjcxMmZmYkNFMDJGNzMiLCJ0byI6IjB4NzU1M0Y2RkE0RmI2Mjk4NmI2NGY3OWFFRmExZkI5M2VhNjRBMjJiMSIsInZhbHVlIjoiMTAwMCIsInZhbGlkQWZ0ZXIiOiIxNzQ4NTU0NjI5IiwidmFsaWRCZWZvcmUiOiIxNzQ4NTU0NzQ5Iiwibm9uY2UiOiIweDE3NjgwNTgxMzQ4ZmRmZjllOWM5ZDc1MTI0ZDJmMjdkZjgwNTAyZWRmYzFlNTAyYzNiMTRhODk2MTVkY2VmNDYifX19";
         var paymentPayload = PaymentPayload.builder()
-                .x402Version(X402_SUPPORTED_VERSION)
-                .scheme(EXACT_SCHEME_NAME)
+                .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
+                .scheme(EXACT_SCHEME.name())
                 .network(BASE_SEPOLIA.name())
                 .payload(ExactSchemePayload.builder()
                         .signature("0xddcf87bbb87e4f059f883f6c1e76e9849d373e09a734580ce92f5a06821a2b995c7d0d678d8240686011ba5741cbf59d333e2ad6f255971e2b24eb107aca79a71c")

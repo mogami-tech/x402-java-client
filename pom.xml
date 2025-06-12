@@ -8,7 +8,7 @@
     <!-- Project information -->
     <groupId>tech.mogami.java.client</groupId>
     <artifactId>mogami-x402-java-client</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
     <name>Mogami Java x402 client - Retrieve payment information and pay</name>
     <description>Mogami Java x402 client - Retrieve payment information and pay</description>
@@ -72,12 +72,12 @@
         <web3j.utils.version>4.14.0</web3j.utils.version>
 
         <!-- Tests -->
-        <junit-jupiter-engine.version>5.12.2</junit-jupiter-engine.version>
+        <junit-jupiter-engine.version>5.13.1</junit-jupiter-engine.version>
         <assertj.version>3.27.3</assertj.version>
 
         <!-- Maven -->
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
-        <maven.puppycrawl.checkstyle.version>10.24.0</maven.puppycrawl.checkstyle.version>
+        <maven.puppycrawl.checkstyle.version>10.25.0</maven.puppycrawl.checkstyle.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>tech.mogami.commons</groupId>
             <artifactId>mogami-x402-commons</artifactId>
-            <version>0.0.4</version>
+            <version>0.0.5</version>
         </dependency>
 
         <dependency>
@@ -315,6 +315,20 @@
     <!-- =========================================================================================================== -->
 
     <!-- =========================================================================================================== -->
+    <repositories>
+        <repository>
+            <id>central-snapshots</id>
+            <name>Maven Central Snapshots</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>daily</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
     <distributionManagement>
         <repository>
             <id>central</id>
