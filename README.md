@@ -12,8 +12,6 @@
     </a>
 </p>
 
-<hr>
-
 <h3 align="center">Mogami Java x402 client - Retrieve x402 payment information and pay!</h3>
 
 <p align="center">
