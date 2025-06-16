@@ -29,7 +29,7 @@ public class X402PaymentHelperTest {
 
     @Test
     @DisplayName("getPaymentRequiredFromBody()")
-    public void testSetPaymentRequiredFromHeader() {
+    public void getPaymentRequiredFromBody() {
         // Test when the header is null or empty.
         assertTrue(X402PaymentHelper.getPaymentRequiredFromBody(null).isEmpty());
         assertTrue(X402PaymentHelper.getPaymentRequiredFromBody("").isEmpty());
@@ -76,7 +76,7 @@ public class X402PaymentHelperTest {
 
     @Test
     @DisplayName("getPayloadFromPaymentRequirements()")
-    public void testGetPayloadFromPaymentRequirements() {
+    public void getPayloadFromPaymentRequirements() {
         // Getting a specific payment requirements payload.
         var paymentRequirements1 = X402PaymentHelper
                 .getPaymentRequiredFromBody(TEST_PAYMENT_REQUIREMENTS_HEADER)
@@ -109,7 +109,7 @@ public class X402PaymentHelperTest {
 
     @Test
     @DisplayName("getSignedPayload()")
-    public void testGetSignedPayload() {
+    public void getSignedPayload() {
         var expectedSignature = "0xde533856d81c76984a8dbc8d563bbb6d6d4ca36ce6c4d6e8cf315de3bfc14ab26d6bcdc37549aeed78bf92e39d5180268f8f399a4ffb816cfbf500823882b6001c";
         var credentials = Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY);
         var paymentRequirements = PaymentRequirements.builder()
@@ -134,10 +134,8 @@ public class X402PaymentHelperTest {
                                 .validAfter("1748534647")
                                 .validBefore("1748534767")
                                 .nonce("0x9b750f5097972d82c02ac371278b83ecf3ca3be8387db59e664eb38c98f97a3d")
-                                .build()
-                        )
-                        .build()
-                )
+                                .build())
+                        .build())
                 .build();
 
         // We test the signing of the payment payload.
@@ -163,7 +161,7 @@ public class X402PaymentHelperTest {
 
     @Test
     @DisplayName("getPayloadHeader()")
-    public void testGetPayloadHeader() {
+    public void getPayloadHeader() {
         var expectedXPaymentHeader = "eyJ4NDAyVmVyc2lvbiI6MSwic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiYmFzZS1zZXBvbGlhIiwicGF5bG9hZCI6eyJzaWduYXR1cmUiOiIweGRkY2Y4N2JiYjg3ZTRmMDU5Zjg4M2Y2YzFlNzZlOTg0OWQzNzNlMDlhNzM0NTgwY2U5MmY1YTA2ODIxYTJiOTk1YzdkMGQ2NzhkODI0MDY4NjAxMWJhNTc0MWNiZjU5ZDMzM2UyYWQ2ZjI1NTk3MWUyYjI0ZWIxMDdhY2E3OWE3MWMiLCJhdXRob3JpemF0aW9uIjp7ImZyb20iOiIweDI5ODBiYzI0YkJGQjM0REUxQkJDOTE0NzlDYjcxMmZmYkNFMDJGNzMiLCJ0byI6IjB4NzU1M0Y2RkE0RmI2Mjk4NmI2NGY3OWFFRmExZkI5M2VhNjRBMjJiMSIsInZhbHVlIjoiMTAwMCIsInZhbGlkQWZ0ZXIiOiIxNzQ4NTU0NjI5IiwidmFsaWRCZWZvcmUiOiIxNzQ4NTU0NzQ5Iiwibm9uY2UiOiIweDE3NjgwNTgxMzQ4ZmRmZjllOWM5ZDc1MTI0ZDJmMjdkZjgwNTAyZWRmYzFlNTAyYzNiMTRhODk2MTVkY2VmNDYifX19";
         var paymentPayload = PaymentPayload.builder()
                 .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
@@ -178,10 +176,8 @@ public class X402PaymentHelperTest {
                                 .validAfter("1748554629")
                                 .validBefore("1748554749")
                                 .nonce("0x17680581348fdff9e9c9d75124d2f27df80502edfc1e502c3b14a89615dcef46")
-                                .build()
-                        )
-                        .build()
-                )
+                                .build())
+                        .build())
                 .build();
 
         // We test base64 result.
@@ -191,7 +187,7 @@ public class X402PaymentHelperTest {
 
     @Test
     @DisplayName("getSettleResponseFromHeader() with null payload")
-    public void testGetSettleResponseFromHeader() {
+    public void getSettleResponseFromHeader() {
         // Test with empty values.
         assertTrue(X402PaymentHelper.getSettleResponseFromHeader(null).isEmpty());
         assertTrue(X402PaymentHelper.getSettleResponseFromHeader("").isEmpty());
