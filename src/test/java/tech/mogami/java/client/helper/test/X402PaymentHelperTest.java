@@ -20,12 +20,47 @@ import static tech.mogami.commons.header.payment.schemes.exact.ExactSchemeConsta
 import static tech.mogami.commons.test.BaseTestData.TEST_ASSET_CONTRACT_ADDRESS;
 import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1;
 import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY;
-import static tech.mogami.commons.test.BaseTestData.TEST_PAYMENT_REQUIREMENTS_HEADER;
 import static tech.mogami.commons.test.BaseTestData.TEST_SERVER_WALLET_ADDRESS_1;
-import static tech.mogami.commons.test.BaseTestData.TEST_SERVER_WALLET_ADDRESS_2;
 
 @DisplayName("X402PaymentHelper Tests")
 public class X402PaymentHelperTest {
+
+    /** Payment requirements for server. */
+    String TEST_PAYMENT_REQUIREMENTS_HEADER = """
+            {
+              "x402Version": 1,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "base-sepolia",
+                  "maxAmountRequired": "1000",
+                  "resource": "http://localhost/weather",
+                  "description": "",
+                  "mimeType": "",
+                  "payTo": "0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1",
+                  "maxTimeoutSeconds": 60,
+                  "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "extra": {
+                    "name": "USDC",
+                    "version": "2"
+                  }
+                },
+                {
+                  "scheme": "exact",
+                  "network": "base-sepolia",
+                  "maxAmountRequired": "2000",
+                  "resource": "http://localhost/weather",
+                  "description": "Description number 2",
+                  "mimeType": "",
+                  "payTo": "0x29082D631199d7FD35399378B6522D6042A7Da6C",
+                  "maxTimeoutSeconds": 60,
+                  "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                  "extra": {}
+                }
+              ],
+              "error": "Payment required"
+            }
+            """;
 
     @Test
     @DisplayName("getPaymentRequiredFromBody()")
@@ -50,7 +85,7 @@ public class X402PaymentHelperTest {
                                 assertThat(paymentRequirements.resource()).isEqualTo("http://localhost/weather");
                                 assertThat(paymentRequirements.description()).isEmpty();
                                 assertThat(paymentRequirements.mimeType()).isEmpty();
-                                assertThat(paymentRequirements.payTo()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_1);
+                                assertThat(paymentRequirements.payTo()).isEqualTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1");
                                 assertThat(paymentRequirements.maxTimeoutSeconds()).isEqualTo(60);
                                 assertThat(paymentRequirements.asset()).isEqualTo(TEST_ASSET_CONTRACT_ADDRESS);
                                 assertThat(paymentRequirements.extra().get(EXACT_SCHEME_PARAMETER_NAME)).isEqualTo(USDC.name());
@@ -65,7 +100,7 @@ public class X402PaymentHelperTest {
                                 assertThat(pr.resource()).isEqualTo("http://localhost/weather");
                                 assertThat(pr.description()).isEqualTo("Description number 2");
                                 assertThat(pr.mimeType()).isEmpty();
-                                assertThat(pr.payTo()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_2);
+                                assertThat(pr.payTo()).isEqualTo("0x29082D631199d7FD35399378B6522D6042A7Da6C");
                                 assertThat(pr.maxTimeoutSeconds()).isEqualTo(60);
                                 assertThat(pr.asset()).isEqualTo(TEST_ASSET_CONTRACT_ADDRESS);
                                 assertThat(pr.extra().size()).isEqualTo(0);
@@ -86,7 +121,7 @@ public class X402PaymentHelperTest {
 
         assertThat(X402PaymentHelper.getPayloadFromPaymentRequirements(
                 "INVALID_SIGNATURE",
-                TEST_CLIENT_WALLET_ADDRESS_1,
+                "0xf6b42050A71Ca13f842eDa53C7d31B7C1BD94F6E",
                 paymentRequirements1.accepts().getFirst()
         )).satisfies(paymentPayload -> {
             assertThat(paymentPayload.x402Version()).isEqualTo(X402_SUPPORTED_VERSION_BY_MOGAMI.version());
@@ -95,8 +130,8 @@ public class X402PaymentHelperTest {
             assertThat(paymentPayload.payload())
                     .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                         assertThat(exactSchemePayload.signature()).isEqualTo("INVALID_SIGNATURE");
-                        assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
-                        assertThat(exactSchemePayload.authorization().to()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_1);
+                        assertThat(exactSchemePayload.authorization().from()).isEqualTo("0xf6b42050A71Ca13f842eDa53C7d31B7C1BD94F6E");
+                        assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1");
                         assertThat(exactSchemePayload.authorization().value()).isEqualTo("1000");
                         // TODO Test validAfter & validBefore on values.
                         assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
@@ -111,13 +146,13 @@ public class X402PaymentHelperTest {
     @DisplayName("getSignedPayload()")
     public void getSignedPayload() {
         var expectedSignature = "0xde533856d81c76984a8dbc8d563bbb6d6d4ca36ce6c4d6e8cf315de3bfc14ab26d6bcdc37549aeed78bf92e39d5180268f8f399a4ffb816cfbf500823882b6001c";
-        var credentials = Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY);
+        var credentials = Credentials.create("0x9d2675820d55300a05c8991df217a619bcfdc86e2fd91e56443dbbcf159337fd");
         var paymentRequirements = PaymentRequirements.builder()
                 .scheme(EXACT_SCHEME.name())
                 .network(BASE_SEPOLIA.name())
                 .maxAmountRequired("10000")
                 .resource("http://localhost/weather")
-                .payTo(TEST_SERVER_WALLET_ADDRESS_1)
+                .payTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1")
                 .asset("0x036CbD53842c5426634e7929541eC2318f3dCF7e")
                 .extra(EXACT_SCHEME_PARAMETER_NAME, "USDC")
                 .extra(EXACT_SCHEME_PARAMETER_VERSION, "2")
@@ -128,8 +163,8 @@ public class X402PaymentHelperTest {
                 .network(BASE_SEPOLIA.name())
                 .payload(ExactSchemePayload.builder()
                         .authorization(ExactSchemePayload.Authorization.builder()
-                                .from(TEST_CLIENT_WALLET_ADDRESS_1)
-                                .to(TEST_SERVER_WALLET_ADDRESS_1)
+                                .from("0x2980bc24bBFB34DE1BBC91479Cb712ffbCE02F73")
+                                .to("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1")
                                 .value("10000")
                                 .validAfter("1748534647")
                                 .validBefore("1748534767")
@@ -147,8 +182,8 @@ public class X402PaymentHelperTest {
                     assertThat(signedPayload.payload())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                                 assertThat(exactSchemePayload.signature()).isEqualTo(expectedSignature);
-                                assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
-                                assertThat(exactSchemePayload.authorization().to()).isEqualTo(TEST_SERVER_WALLET_ADDRESS_1);
+                                assertThat(exactSchemePayload.authorization().from()).isEqualTo("0x2980bc24bBFB34DE1BBC91479Cb712ffbCE02F73");
+                                assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1");
                                 assertThat(exactSchemePayload.authorization().value()).isEqualTo("10000");
                                 // TODO Test validAfter & validBefore on values.
                                 assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
@@ -199,11 +234,12 @@ public class X402PaymentHelperTest {
                 .isPresent()
                 .get()
                 .satisfies(settleResponse -> {
+                    System.out.println("Settle Response: " + settleResponse);
                     assertThat(settleResponse.success()).isTrue();
                     assertThat(settleResponse.network()).isEqualTo(BASE_SEPOLIA.name());
                     assertThat(settleResponse.transaction()).isEqualTo("0x29aa3c7a08274e6dff66c79b1b086d433c2ab9c85051ecee024b0531b22944de");
                     assertThat(settleResponse.errorReason()).isNull();
-                    assertThat(settleResponse.payer()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
+                    assertThat(settleResponse.payer()).isEqualTo("0x2980bc24bBFB34DE1BBC91479Cb712ffbCE02F73");
                 });
     }
 
