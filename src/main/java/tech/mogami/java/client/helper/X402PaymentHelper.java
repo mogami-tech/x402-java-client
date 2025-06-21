@@ -35,12 +35,9 @@ public class X402PaymentHelper {
      * @return A PaymentRequired object containing the parsed payment requirements.
      */
     public static Optional<PaymentRequired> getPaymentRequiredFromBody(final String xPaymentHeader) {
-        if (StringUtils.isEmpty(xPaymentHeader)) {
-            // If the header is empty, it means no payment is required.
-            return Optional.empty();
-        } else {
-            return Optional.of(JsonUtil.fromJson(xPaymentHeader, PaymentRequired.class));
-        }
+        return Optional.ofNullable(xPaymentHeader)
+                .filter(StringUtils::isNotEmpty)
+                .map(header -> JsonUtil.fromJson(header, PaymentRequired.class));
     }
 
     /**
@@ -92,7 +89,7 @@ public class X402PaymentHelper {
             @NonNull final PaymentRequirements paymentsRequirements,
             @NonNull final PaymentPayload paymentPayload
     ) {
-        // We change the signature in the payload with the one signed by the user.
+        // We change the signature field in the payload with the one signed by the user.
         ExactSchemePayload payload = ((ExactSchemePayload) paymentPayload.payload()).toBuilder()
                 .signature(EIP712Helper.sign(credentials, paymentsRequirements, paymentPayload))
                 .build();
@@ -120,12 +117,10 @@ public class X402PaymentHelper {
      * @return A SettleResponse object if the header is not empty, otherwise null.
      */
     public static Optional<SettleResponse> getSettleResponseFromHeader(final String xPaymentResponseHeader) {
-        if (StringUtils.isEmpty(xPaymentResponseHeader)) {
-            // If the header is empty, it means no payment was settled.
-            return Optional.empty();
-        } else {
-            return Optional.ofNullable(JsonUtil.fromJson(Base64Util.decode(xPaymentResponseHeader), SettleResponse.class));
-        }
+        return Optional.ofNullable(xPaymentResponseHeader)
+                .filter(StringUtils::isNotEmpty)
+                .map(Base64Util::decode)
+                .map(decoded -> JsonUtil.fromJson(decoded, SettleResponse.class));
     }
 
 }
