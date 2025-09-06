@@ -65,7 +65,7 @@
 
         <!-- ======================================================================================================= -->
         <!-- Libraries releases -->
-        <lombok.version>1.18.38</lombok.version>
+        <lombok.version>1.18.40</lombok.version>
 
         <!-- Crypto libraries -->
         <web3j.crypto.version>4.14.0</web3j.crypto.version>
