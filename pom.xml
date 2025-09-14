@@ -67,10 +67,6 @@
         <!-- Libraries releases -->
         <lombok.version>1.18.38</lombok.version>
 
-        <!-- Crypto libraries -->
-        <web3j.crypto.version>4.14.0</web3j.crypto.version>
-        <web3j.utils.version>4.14.0</web3j.utils.version>
-
         <!-- Tests -->
         <junit-jupiter-engine.version>5.13.1</junit-jupiter-engine.version>
         <assertj.version>3.27.3</assertj.version>
@@ -100,7 +96,7 @@
         <dependency>
             <groupId>tech.mogami.commons</groupId>
             <artifactId>mogami-x402-commons</artifactId>
-            <version>0.0.6</version>
+            <version>0.0.7-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -108,17 +104,6 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>crypto</artifactId>
-            <version>${web3j.crypto.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>utils</artifactId>
-            <version>${web3j.utils.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
