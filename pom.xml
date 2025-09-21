@@ -69,7 +69,7 @@
 
         <!-- Tests -->
         <junit-jupiter-engine.version>5.13.4</junit-jupiter-engine.version>
-        <assertj.version>3.27.4</assertj.version>
+        <assertj.version>3.27.5</assertj.version>
 
         <!-- Maven -->
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
