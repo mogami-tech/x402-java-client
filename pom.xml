@@ -11,7 +11,7 @@
     <version>0.1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Mogami Java x402 client - Retrieve payment information and pay</name>
-    <description>Mogami Java x402 client - Retrieve payment information and pay</description>
+    <description>The Client SDK makes it easy to interact with x402 payment endpoints</description>
     <url>https://github.com/mogami-tech/x402-java-client</url>
     <licenses>
         <license>
@@ -96,7 +96,7 @@
         <dependency>
             <groupId>tech.mogami.commons</groupId>
             <artifactId>mogami-x402-commons</artifactId>
-            <version>0.0.8-SNAPSHOT</version>
+            <version>0.0.8</version>
         </dependency>
 
         <dependency>
