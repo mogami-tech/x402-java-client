@@ -8,7 +8,7 @@
     <!-- Project information -->
     <groupId>tech.mogami.java.client</groupId>
     <artifactId>mogami-x402-java-client</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Mogami Java x402 client - Retrieve payment information and pay</name>
     <description>The Client SDK makes it easy to interact with x402 payment endpoints</description>
