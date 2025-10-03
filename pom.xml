@@ -68,7 +68,7 @@
         <lombok.version>1.18.42</lombok.version>
 
         <!-- Tests -->
-        <junit-jupiter-engine.version>5.13.4</junit-jupiter-engine.version>
+        <junit-jupiter-engine.version>6.0.0</junit-jupiter-engine.version>
         <assertj.version>3.27.6</assertj.version>
 
         <!-- Maven -->
