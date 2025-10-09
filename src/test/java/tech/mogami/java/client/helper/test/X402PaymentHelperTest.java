@@ -8,9 +8,13 @@ import tech.mogami.commons.header.payment.PaymentRequirements;
 import tech.mogami.commons.header.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.java.client.helper.X402PaymentHelper;
 
+import java.time.Instant;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.mogami.commons.constant.BlockchainConstants.BLOCKCHAIN_ADDRESS_PREFIX;
+import static tech.mogami.commons.constant.X402Constants.X402_DEFAULT_PAYMENT_TIMEOUT_SECONDS;
 import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
 import static tech.mogami.commons.constant.stablecoin.Stablecoins.USDC;
 import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
@@ -23,7 +27,7 @@ import static tech.mogami.commons.test.BaseTestData.TEST_ASSET_CONTRACT_ADDRESS;
 public class X402PaymentHelperTest {
 
     /** Payment requirements for server. */
-    String TEST_PAYMENT_REQUIREMENTS_HEADER = """
+    final String TEST_PAYMENT_REQUIREMENTS_HEADER = """
             {
               "x402Version": 1,
               "accepts": [
@@ -109,6 +113,8 @@ public class X402PaymentHelperTest {
     @Test
     @DisplayName("getPayloadFromPaymentRequirements()")
     public void getPayloadFromPaymentRequirements() {
+        var now = Instant.now();
+
         // Getting a specific payment requirements payload.
         var paymentRequirements1 = X402PaymentHelper
                 .getPaymentRequiredFromBody(TEST_PAYMENT_REQUIREMENTS_HEADER)
@@ -130,12 +136,21 @@ public class X402PaymentHelperTest {
                         assertThat(exactSchemePayload.authorization().from()).isEqualTo("0xf6b42050A71Ca13f842eDa53C7d31B7C1BD94F6E");
                         assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1");
                         assertThat(exactSchemePayload.authorization().value()).isEqualTo("1000");
-                        // TODO Test validAfter & validBefore on values.
-                        assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
-                        assertThat(exactSchemePayload.authorization().validBefore()).isNotEmpty();
                         assertThat(exactSchemePayload.authorization().nonce()).isNotEmpty();
                         assertThat(exactSchemePayload.authorization().nonce()).startsWith(BLOCKCHAIN_ADDRESS_PREFIX);
-                    });
+
+                        // Time and date tests.
+                        // Now          : 2025-10-09T20:54:38
+                        // validAfter   : 2025-10-09T20:54:38
+                        // validBefore  : 2025-10-09T20:55:38
+                        assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
+                        assertThat(exactSchemePayload.authorization().validBefore()).isNotEmpty();
+                        var validAfterEpochSeconds = Long.parseLong(exactSchemePayload.authorization().validAfter());
+                        var validBeforeEpochSeconds = Long.parseLong(exactSchemePayload.authorization().validBefore());
+                        assertThat(validAfterEpochSeconds).isGreaterThanOrEqualTo(now.getEpochSecond());
+                        assertThat(validBeforeEpochSeconds).isLessThanOrEqualTo(now.plusSeconds(X402_DEFAULT_PAYMENT_TIMEOUT_SECONDS).getEpochSecond());
+                        assertThat(validBeforeEpochSeconds - validAfterEpochSeconds).isBetween(58L, 62L);
+                      });
         });
     }
 
@@ -182,11 +197,12 @@ public class X402PaymentHelperTest {
                                 assertThat(exactSchemePayload.authorization().from()).isEqualTo("0x2980bc24bBFB34DE1BBC91479Cb712ffbCE02F73");
                                 assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1");
                                 assertThat(exactSchemePayload.authorization().value()).isEqualTo("10000");
-                                // TODO Test validAfter & validBefore on values.
                                 assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().validBefore()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().nonce()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().nonce()).startsWith(BLOCKCHAIN_ADDRESS_PREFIX);
+                                assertThat(exactSchemePayload.authorization().validAfter()).isNotEmpty();
+                                assertThat(exactSchemePayload.authorization().validBefore()).isNotEmpty();
                             });
                 });
     }
@@ -194,6 +210,8 @@ public class X402PaymentHelperTest {
     @Test
     @DisplayName("getPayloadHeader()")
     public void getPayloadHeader() {
+        assertThatCode(() -> X402PaymentHelper.getPayloadHeader(null)).doesNotThrowAnyException();
+
         var expectedXPaymentHeader = "eyJ4NDAyVmVyc2lvbiI6MSwic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiYmFzZS1zZXBvbGlhIiwicGF5bG9hZCI6eyJzaWduYXR1cmUiOiIweGRkY2Y4N2JiYjg3ZTRmMDU5Zjg4M2Y2YzFlNzZlOTg0OWQzNzNlMDlhNzM0NTgwY2U5MmY1YTA2ODIxYTJiOTk1YzdkMGQ2NzhkODI0MDY4NjAxMWJhNTc0MWNiZjU5ZDMzM2UyYWQ2ZjI1NTk3MWUyYjI0ZWIxMDdhY2E3OWE3MWMiLCJhdXRob3JpemF0aW9uIjp7ImZyb20iOiIweDI5ODBiYzI0YkJGQjM0REUxQkJDOTE0NzlDYjcxMmZmYkNFMDJGNzMiLCJ0byI6IjB4NzU1M0Y2RkE0RmI2Mjk4NmI2NGY3OWFFRmExZkI5M2VhNjRBMjJiMSIsInZhbHVlIjoiMTAwMCIsInZhbGlkQWZ0ZXIiOiIxNzQ4NTU0NjI5IiwidmFsaWRCZWZvcmUiOiIxNzQ4NTU0NzQ5Iiwibm9uY2UiOiIweDE3NjgwNTgxMzQ4ZmRmZjllOWM5ZDc1MTI0ZDJmMjdkZjgwNTAyZWRmYzFlNTAyYzNiMTRhODk2MTVkY2VmNDYifX19";
         var paymentPayload = PaymentPayload.builder()
                 .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())

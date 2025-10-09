@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.api.facilitator.settle.SettleResponse;
 import tech.mogami.commons.crypto.signature.EIP712Helper;
@@ -34,7 +35,7 @@ public class X402PaymentHelper {
      * @param xPaymentHeader The value of the X-Payment header.
      * @return A PaymentRequired object containing the parsed payment requirements.
      */
-    public static Optional<PaymentRequired> getPaymentRequiredFromBody(final String xPaymentHeader) {
+    public static Optional<PaymentRequired> getPaymentRequiredFromBody(@Nullable final String xPaymentHeader) {
         return Optional.ofNullable(xPaymentHeader)
                 .filter(StringUtils::isNotEmpty)
                 .map(header -> JsonUtil.fromJson(header, PaymentRequired.class));
@@ -49,7 +50,7 @@ public class X402PaymentHelper {
      * @return A PaymentPayload object containing the payment details.
      */
     public static PaymentPayload getPayloadFromPaymentRequirements(
-            final String signature,
+            @Nullable final String signature,
             @NonNull final String fromAddress,
             @NonNull final PaymentRequirements paymentRequirements
     ) {
@@ -106,7 +107,7 @@ public class X402PaymentHelper {
      * @param paymentPayload The PaymentPayload to encode.
      * @return A Base64 encoded string representation of the PaymentPayload.
      */
-    public static String getPayloadHeader(@NonNull final PaymentPayload paymentPayload) {
+    public static @Nullable String getPayloadHeader(@Nullable final PaymentPayload paymentPayload) {
         return Base64Util.encode(JsonUtil.toJson(paymentPayload));
     }
 
@@ -116,7 +117,7 @@ public class X402PaymentHelper {
      * @param xPaymentResponseHeader The Base64 encoded X-PAYMENT-RESPONSE header.
      * @return A SettleResponse object if the header is not empty, otherwise null.
      */
-    public static Optional<SettleResponse> getSettleResponseFromHeader(final String xPaymentResponseHeader) {
+    public static Optional<SettleResponse> getSettleResponseFromHeader(@Nullable final String xPaymentResponseHeader) {
         return Optional.ofNullable(xPaymentResponseHeader)
                 .filter(StringUtils::isNotEmpty)
                 .map(Base64Util::decode)

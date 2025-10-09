@@ -1,4 +1,4 @@
 /**
- * Helper classes for the Mogami Java client.
+ * Mogami x402 Java client helper.
  */
 package tech.mogami.java.client.helper;
