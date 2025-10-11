@@ -4,14 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- =========================================================================================================== -->
-    <!-- Project information -->
+    <!-- Project information ======================================================================================= -->
     <groupId>tech.mogami.java.client</groupId>
     <artifactId>mogami-x402-java-client</artifactId>
-    <version>0.1.3</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>Mogami Java x402 client - Retrieve payment information and pay</name>
-    <description>The Client SDK makes it easy to interact with x402 payment endpoints</description>
+    <name>Mogami Java x402 client SDK</name>
+    <description>Use x402 payments into your apps: fetch requirements, sign, and send transactions</description>
     <url>https://github.com/mogami-tech/x402-java-client</url>
     <licenses>
         <license>
@@ -20,10 +19,8 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
-    <!-- Developers -->
+    <!-- Developers ================================================================================================ -->
     <developers>
         <developer>
             <id>straumat</id>
@@ -32,73 +29,73 @@
             <url>https://github.com/straumat</url>
         </developer>
     </developers>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
-    <!-- Source Code Management -->
+    <!-- Source Code Management ==================================================================================== -->
     <scm>
         <url>https://github.com/mogami-tech/x402-java-client</url>
         <connection>scm:git:git://github.com/mogami-tech/x402-java-client.git</connection>
         <developerConnection>scm:git:git@github.com:mogami-tech/x402-java-client.git</developerConnection>
     </scm>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
-    <!-- Issue management -->
+    <!-- Issue management ========================================================================================== -->
     <issueManagement>
         <system>GitHub Issues</system>
         <url>https://github.com/mogami-tech/x402-java-client/issues</url>
     </issueManagement>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
-    <!-- Project configuration -->
+    <!-- Project configuration ===================================================================================== -->
     <properties>
-        <!-- ======================================================================================================= -->
         <!-- Java build configuration -->
-
         <java.version>21</java.version>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.source>21</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- ======================================================================================================= -->
-        <!-- Libraries releases -->
+        <!-- Mogami -->
+        <mogami.commons.version>1.0.0</mogami.commons.version>
+
+        <!-- Boilerplate & Utils -->
         <lombok.version>1.18.42</lombok.version>
+        <jspecify.version>1.0.0</jspecify.version>
 
         <!-- Tests -->
-        <junit-jupiter-engine.version>5.13.4</junit-jupiter-engine.version>
+        <junit-jupiter.version>6.0.0</junit-jupiter.version>
         <assertj.version>3.27.6</assertj.version>
 
-        <!-- Maven -->
+        <!-- Maven plugins -->
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
-        <maven.puppycrawl.checkstyle.version>11.0.1</maven.puppycrawl.checkstyle.version>
-        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+        <maven.puppycrawl.checkstyle.version>11.1.0</maven.puppycrawl.checkstyle.version>
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
-        <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
-        <maven.jar.plugin.version>3.4.2</maven.jar.plugin.version>
-        <maven.archetype-packaging.version>3.2.1</maven.archetype-packaging.version>
         <maven.surefire.plugin.version>3.5.4</maven.surefire.plugin.version>
         <maven.surefire-junit5-tree-reporter.version>1.4.0</maven.surefire-junit5-tree-reporter.version>
-        <maven.maven-gpg-plugin>3.2.8</maven.maven-gpg-plugin>
-        <maven.maven-deploy-plugin>3.1.4</maven.maven-deploy-plugin>
-        <maven.gitflow-maven-plugin>1.21.0</maven.gitflow-maven-plugin>
-        <maven.central-publishing-maven-plugin>0.9.0</maven.central-publishing-maven-plugin>
+        <maven.jar.plugin.version>3.4.2</maven.jar.plugin.version>
+        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+        <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
+        <maven.archetype-packaging.version>3.2.1</maven.archetype-packaging.version>
+        <maven.gitflow-maven-plugin.version>1.21.0</maven.gitflow-maven-plugin.version>
+        <maven.gpg-plugin.version>3.2.8</maven.gpg-plugin.version>
+        <maven.deploy-plugin.version>3.1.4</maven.deploy-plugin.version>
+        <maven.central-publishing-maven-plugin.version>0.9.0</maven.central-publishing-maven-plugin.version>
     </properties>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
-    <!-- Dependencies -->
+    <!-- Dependencies ============================================================================================== -->
     <dependencies>
         <!-- Mogami -->
         <dependency>
             <groupId>tech.mogami.commons</groupId>
             <artifactId>mogami-x402-commons</artifactId>
-            <version>0.0.8</version>
+            <version>${mogami.commons.version}</version>
         </dependency>
 
+        <!-- Boilerplate & Utils -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>${jspecify.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -109,8 +106,14 @@
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit-jupiter-engine.version}</version>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -121,10 +124,8 @@
         </dependency>
     </dependencies>
 
-    <!-- =========================================================================================================== -->
-    <!-- Build configuration -->
+    <!-- Build configuration ======================================================================================= -->
     <build>
-        <!-- Plugins -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -152,7 +153,6 @@
                     <violationSeverity>warning</violationSeverity>
                 </configuration>
             </plugin>
-            <!-- Tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -174,7 +174,6 @@
                     </statelessTestsetInfoReporter>
                 </configuration>
             </plugin>
-            <!-- Jar (classes, sources and documentation)-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -217,11 +216,10 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Release -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>${maven.maven-deploy-plugin}</version>
+                <version>${maven.deploy-plugin.version}</version>
                 <configuration>
                     <skip>true</skip>
                 </configuration>
@@ -229,7 +227,7 @@
             <plugin>
                 <groupId>com.amashchenko.maven.plugin</groupId>
                 <artifactId>gitflow-maven-plugin</artifactId>
-                <version>${maven.gitflow-maven-plugin}</version>
+                <version>${maven.gitflow-maven-plugin.version}</version>
                 <configuration>
                     <skipTestProject>true</skipTestProject>
                     <gitFlowConfig>
@@ -250,10 +248,8 @@
             </plugin>
         </plugins>
     </build>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
-    <!-- Profiles -->
+    <!-- Profiles ================================================================================================== -->
     <profiles>
         <profile>
             <id>release</id>
@@ -265,7 +261,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven.maven-gpg-plugin}</version>
+                        <version>${maven.gpg-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>sign-release</id>
@@ -286,7 +282,7 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>${maven.central-publishing-maven-plugin}</version>
+                        <version>${maven.central-publishing-maven-plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
@@ -297,9 +293,8 @@
             </build>
         </profile>
     </profiles>
-    <!-- =========================================================================================================== -->
 
-    <!-- =========================================================================================================== -->
+    <!-- Repositories ============================================================================================== -->
     <repositories>
         <repository>
             <id>central-snapshots</id>
@@ -314,6 +309,8 @@
             </releases>
         </repository>
     </repositories>
+
+    <!-- Distribution management =================================================================================== -->
     <distributionManagement>
         <repository>
             <id>central</id>
@@ -324,6 +321,5 @@
             <url>https://central.sonatype.com/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
-    <!-- =========================================================================================================== -->
 
 </project>
