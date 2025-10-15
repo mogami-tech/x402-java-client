@@ -16,12 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.mogami.commons.constant.BlockchainConstants.BLOCKCHAIN_ADDRESS_PREFIX;
 import static tech.mogami.commons.constant.X402Constants.X402_DEFAULT_PAYMENT_TIMEOUT_SECONDS;
 import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
+import static tech.mogami.commons.constant.network.base.BaseContracts.BASE_SEPOLIA_USDC_CONTRACT;
 import static tech.mogami.commons.constant.stablecoin.Stablecoins.USDC;
 import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
 import static tech.mogami.commons.header.payment.schemes.Schemes.EXACT_SCHEME;
 import static tech.mogami.commons.header.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
 import static tech.mogami.commons.header.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
-import static tech.mogami.commons.test.BaseTestData.TEST_ASSET_CONTRACT_ADDRESS;
 
 @DisplayName("X402PaymentHelper Tests")
 public class X402PaymentHelperTest {
@@ -88,7 +88,7 @@ public class X402PaymentHelperTest {
                                 assertThat(paymentRequirements.mimeType()).isEmpty();
                                 assertThat(paymentRequirements.payTo()).isEqualTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1");
                                 assertThat(paymentRequirements.maxTimeoutSeconds()).isEqualTo(60);
-                                assertThat(paymentRequirements.asset()).isEqualTo(TEST_ASSET_CONTRACT_ADDRESS);
+                                assertThat(paymentRequirements.asset()).isEqualTo(BASE_SEPOLIA_USDC_CONTRACT);
                                 assertThat(paymentRequirements.extra().get(EXACT_SCHEME_PARAMETER_NAME)).isEqualTo(USDC.name());
                                 assertThat(paymentRequirements.extra().get(EXACT_SCHEME_PARAMETER_VERSION)).isEqualTo("2");
                             });
@@ -103,7 +103,7 @@ public class X402PaymentHelperTest {
                                 assertThat(pr.mimeType()).isEmpty();
                                 assertThat(pr.payTo()).isEqualTo("0x29082D631199d7FD35399378B6522D6042A7Da6C");
                                 assertThat(pr.maxTimeoutSeconds()).isEqualTo(60);
-                                assertThat(pr.asset()).isEqualTo(TEST_ASSET_CONTRACT_ADDRESS);
+                                assertThat(pr.asset()).isEqualTo(BASE_SEPOLIA_USDC_CONTRACT);
                                 assertThat(pr.extra().size()).isEqualTo(0);
                             });
                     assertThat(payment.error()).isEqualTo("Payment required");
@@ -149,7 +149,7 @@ public class X402PaymentHelperTest {
                         var validBeforeEpochSeconds = Long.parseLong(exactSchemePayload.authorization().validBefore());
                         assertThat(validAfterEpochSeconds).isGreaterThanOrEqualTo(now.getEpochSecond());
                         assertThat(validBeforeEpochSeconds).isLessThanOrEqualTo(now.plusSeconds(X402_DEFAULT_PAYMENT_TIMEOUT_SECONDS).getEpochSecond());
-                        assertThat(validBeforeEpochSeconds - validAfterEpochSeconds).isBetween(58L, 62L);
+                        assertThat(validBeforeEpochSeconds - validAfterEpochSeconds).isBetween(59L, 61L);
                       });
         });
     }
@@ -165,7 +165,7 @@ public class X402PaymentHelperTest {
                 .maxAmountRequired("10000")
                 .resource("http://localhost/weather")
                 .payTo("0x7553F6FA4Fb62986b64f79aEFa1fB93ea64A22b1")
-                .asset("0x036CbD53842c5426634e7929541eC2318f3dCF7e")
+                .asset(BASE_SEPOLIA_USDC_CONTRACT)
                 .extra(EXACT_SCHEME_PARAMETER_NAME, "USDC")
                 .extra(EXACT_SCHEME_PARAMETER_VERSION, "2")
                 .build();
