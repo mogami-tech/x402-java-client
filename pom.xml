@@ -7,7 +7,7 @@
     <!-- Project information ======================================================================================= -->
     <groupId>tech.mogami.java.client</groupId>
     <artifactId>mogami-x402-java-client</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>Mogami Java x402 client SDK</name>
     <description>Use x402 payments into your apps: fetch requirements, sign, and send transactions</description>
@@ -53,7 +53,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Mogami -->
-        <mogami.commons.version>1.0.0</mogami.commons.version>
+        <mogami.commons.version>1.0.2</mogami.commons.version>
 
         <!-- Boilerplate & Utils -->
         <lombok.version>1.18.42</lombok.version>
@@ -65,11 +65,11 @@
 
         <!-- Maven plugins -->
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
-        <maven.puppycrawl.checkstyle.version>11.1.0</maven.puppycrawl.checkstyle.version>
+        <maven.puppycrawl.checkstyle.version>12.0.1</maven.puppycrawl.checkstyle.version>
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <maven.compiler.plugin.version>3.14.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.4</maven.surefire.plugin.version>
-        <maven.surefire-junit5-tree-reporter.version>1.4.0</maven.surefire-junit5-tree-reporter.version>
+        <maven.surefire-junit5-tree-reporter.version>1.5.1</maven.surefire-junit5-tree-reporter.version>
         <maven.jar.plugin.version>3.4.2</maven.jar.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
