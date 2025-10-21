@@ -7,7 +7,7 @@
     <!-- Project information ======================================================================================= -->
     <groupId>tech.mogami.java.client</groupId>
     <artifactId>mogami-x402-java-client</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
     <name>Mogami Java x402 client SDK</name>
     <description>Use x402 payments into your apps: fetch requirements, sign, and send transactions</description>
