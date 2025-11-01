@@ -249,7 +249,6 @@ public class X402PaymentHelperTest {
                 .isPresent()
                 .get()
                 .satisfies(settleResponse -> {
-                    System.out.println("Settle Response: " + settleResponse);
                     assertThat(settleResponse.success()).isTrue();
                     assertThat(settleResponse.network()).isEqualTo(BASE_SEPOLIA.name());
                     assertThat(settleResponse.transaction()).isEqualTo("0x29aa3c7a08274e6dff66c79b1b086d433c2ab9c85051ecee024b0531b22944de");
