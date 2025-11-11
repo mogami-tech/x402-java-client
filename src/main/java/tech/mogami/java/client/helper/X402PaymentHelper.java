@@ -8,10 +8,10 @@ import org.jspecify.annotations.Nullable;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.api.facilitator.settle.SettleResponse;
 import tech.mogami.commons.crypto.signature.EIP712Helper;
-import tech.mogami.commons.header.payment.PaymentPayload;
-import tech.mogami.commons.header.payment.PaymentRequired;
-import tech.mogami.commons.header.payment.PaymentRequirements;
-import tech.mogami.commons.header.payment.schemes.exact.ExactSchemePayload;
+import tech.mogami.commons.payment.PaymentPayload;
+import tech.mogami.commons.payment.PaymentRequired;
+import tech.mogami.commons.payment.PaymentRequirements;
+import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.commons.util.Base64Util;
 import tech.mogami.commons.util.JsonUtil;
 import tech.mogami.commons.util.NonceUtil;
@@ -20,7 +20,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
-import static tech.mogami.commons.header.payment.schemes.Schemes.EXACT_SCHEME;
+import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 
 /**
  * This class provides helper methods for handling X402 payments.
