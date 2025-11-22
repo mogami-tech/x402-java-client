@@ -1,6 +1,6 @@
 <p>
     <a href="https://mogami.tech">Website</a> •
-    <a href="https://mogami.gitbook.io/mogami/java-client-sdk/getting-started">Quick Start</a> • 
+    <a href="https://mogami.gitbook.io/mogami/java-client-sdk/getting-started">Quick start</a> • 
     <a href="https://mogami.gitbook.io/mogami">Documentation</a> •
     <a href="https://github.com/mogami-tech/x402-examples">Examples</a> •
     <a href="https://x.com/mogami_tech">Twitter</a>
