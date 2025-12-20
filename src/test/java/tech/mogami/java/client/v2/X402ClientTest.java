@@ -1,0 +1,106 @@
+package tech.mogami.java.client.v2;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import tech.mogami.commons.test.BaseTest;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_REQUIRED_HEADER;
+import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_RESPONSE_HEADER;
+import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_HEADER;
+import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
+import static tech.mogami.commons.constant.network.contract.BaseContracts.BASE_SEPOLIA_USDC_CONTRACT;
+import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
+import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
+import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
+
+@DisplayName("X402Client Tests")
+public class X402ClientTest extends BaseTest {
+
+    @Test
+    @DisplayName("fetchPaymentRequirements()")
+    public void fetchPaymentRequirements() {
+        // No headers ==================================================================================================
+        Map<String, String> headers = Map.of();
+        assertThat(X402Client.fetchPaymentRequirements(headers)).isEmpty();
+
+        // Some headers but without PAYMENT-REQUIRED ===================================================================
+        headers = new HashMap<>(Map.of(
+                "Some-Header", "Some-Value",
+                X402_PAYMENT_SIGNATURE_HEADER, "Some-Signature",
+                X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
+        ));
+        assertThat(X402Client.fetchPaymentRequirements(headers)).isEmpty();
+
+        // With PAYMENT-REQUIRED but the encoded value is invalid ======================================================
+        headers = new HashMap<>(Map.of(
+                "Some-Header", "Some-Value",
+                X402_PAYMENT_REQUIRED_HEADER, "Invalid-Encoded-Value",
+                X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
+        ));
+        Map<String, String> finalHeaders1 = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Error during base64 decode for PAYMENT-REQUIRED header");
+
+        // With PAYMENT-REQUIRED but empty JSON ========================================================================
+        headers = new HashMap<>(Map.of(
+                "Some-Header", "Some-Value",
+                X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequiredWithInvalidJson(),
+                X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
+        ));
+        Map<String, String> finalHeaders = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unsupported x402 version: ");
+
+        // With valid PAYMENT-REQUIRED but invalid version =============================================================
+        headers = new HashMap<>(Map.of(
+                "Some-Header", "Some-Value",
+                X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequiredV1(), // V1 is unsupported
+                X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
+        ));
+        Map<String, String> finalHeaders2 = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders2))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unsupported x402 version: 1");
+
+        // With PAYMENT-REQUIRED but no accepts ========================================================================
+        headers = new HashMap<>(Map.of(
+                "Some-Header", "Some-Value",
+                X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentPayloadWithoutAccepts(), // V2 without accepts
+                X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
+        ));
+        Map<String, String> finalHeaders3 = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders3))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("accepts Payment requirements in payment payload is required");
+
+        // With valid PAYMENT-REQUIRED =================================================================================
+        headers = new HashMap<>(Map.of(
+                "Some-Header", "Some-Value",
+                X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequired(),
+                X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
+        ));
+        assertThat(X402Client.fetchPaymentRequirements(headers))
+                .hasSize(1)
+                .first()
+                .satisfies(paymentRequirements -> {
+                    assertThat(paymentRequirements.scheme()).isEqualTo(EXACT_SCHEME.name());
+                    assertThat(paymentRequirements.network()).isEqualTo(BASE_SEPOLIA.networkId());
+                    assertThat(paymentRequirements.amount()).isEqualTo("10000");
+                    assertThat(paymentRequirements.asset()).isEqualTo(BASE_SEPOLIA_USDC_CONTRACT);
+                    assertThat(paymentRequirements.payTo()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
+                    assertThat(paymentRequirements.maxTimeoutSeconds()).isEqualTo(60);
+                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_NAME)).isPresent();
+                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_NAME)).get().isEqualTo("USDC");
+                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).isPresent();
+                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).get().isEqualTo("2");
+                });
+    }
+
+}
