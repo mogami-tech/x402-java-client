@@ -1,8 +1,10 @@
-package tech.mogami.java.client.v2;
+package tech.mogami.java.client.v2.core;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tech.mogami.commons.test.BaseTest;
+import tech.mogami.java.client.v2.X402Client;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,15 +20,15 @@ import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 
-@DisplayName("X402Client Tests")
-public class X402ClientTest extends BaseTest {
+@DisplayName("X402Client fetchPaymentRequirements() tests")
+public class FetchPaymentRequirementsTest extends BaseTest {
 
     @Test
-    @DisplayName("fetchPaymentRequirements()")
-    public void fetchPaymentRequirements() {
+    @DisplayName("Method execution")
+    public void execute() {
         // No headers ==================================================================================================
         Map<String, String> headers = Map.of();
-        assertThat(X402Client.fetchPaymentRequirements(headers)).isEmpty();
+        Assertions.assertThat(X402Client.fetchPaymentRequirements(headers)).isEmpty();
 
         // Some headers but without PAYMENT-REQUIRED ===================================================================
         headers = new HashMap<>(Map.of(
@@ -53,8 +55,8 @@ public class X402ClientTest extends BaseTest {
                 X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequiredWithInvalidJson(),
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
-        Map<String, String> finalHeaders = headers;
-        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders))
+        Map<String, String> finalHeaders2 = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders2))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported x402 version: ");
 
@@ -64,8 +66,8 @@ public class X402ClientTest extends BaseTest {
                 X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequiredV1(), // V1 is unsupported
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
-        Map<String, String> finalHeaders2 = headers;
-        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders2))
+        Map<String, String> finalHeaders3 = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders3))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported x402 version: 1");
 
@@ -75,8 +77,8 @@ public class X402ClientTest extends BaseTest {
                 X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentPayloadWithoutAccepts(), // V2 without accepts
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
-        Map<String, String> finalHeaders3 = headers;
-        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders3))
+        Map<String, String> finalHeaders4 = headers;
+        assertThatThrownBy(() -> X402Client.fetchPaymentRequirements(finalHeaders4))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("accepts Payment requirements in payment payload is required");
 
@@ -101,6 +103,8 @@ public class X402ClientTest extends BaseTest {
                     assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).isPresent();
                     assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).get().isEqualTo("2");
                 });
+
+        // TODO Add test for invalid payment requirements (e.g., negative amount)
     }
 
 }

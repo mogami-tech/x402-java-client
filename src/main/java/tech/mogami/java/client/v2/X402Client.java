@@ -5,14 +5,19 @@ import org.web3j.crypto.Credentials;
 import tech.mogami.commons.payment.PaymentPayload;
 import tech.mogami.commons.payment.PaymentRequired;
 import tech.mogami.commons.payment.PaymentRequirements;
+import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.commons.util.Base64Util;
 import tech.mogami.commons.util.JsonUtil;
+import tech.mogami.commons.util.NonceUtil;
 import tech.mogami.commons.util.ValidationUtil;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_REQUIRED_HEADER;
+import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
+import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 
 /**
  * Version 2 of the Mogami Java client.
@@ -68,14 +73,33 @@ public class X402Client {
     /**
      * Creates a PaymentPayload based on the given PaymentRequirements and fromAddress.
      *
-     * @param requirements The payment requirements.
-     * @param fromAddress  The address from which the payment is made.
+     * @param paymentRequirements The payment requirements.
+     * @param fromAddress         The address from which the payment is made.
      * @return A PaymentPayload object.
      */
-    public PaymentPayload createPaymentPayload(final PaymentRequirements requirements,
+    public PaymentPayload createPaymentPayload(final PaymentRequirements paymentRequirements,
                                                final String fromAddress) {
-        // Implementation goes here
-        return null;
+        if (paymentRequirements.scheme().equals(EXACT_SCHEME.name())) {
+            long now = Instant.now().getEpochSecond();
+            return PaymentPayload.builder()
+                    .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
+                    .accepted(paymentRequirements)
+                    .payload(ExactSchemePayload.builder()
+                            .signature(null)
+                            .authorization(ExactSchemePayload.Authorization.builder()
+                                    .from(fromAddress)
+                                    .to(paymentRequirements.payTo())
+                                    .value(paymentRequirements.amount())
+                                    .validAfter(Long.toString(now))
+                                    .validBefore(Long.toString(now + paymentRequirements.maxTimeoutSeconds()))
+                                    .nonce(NonceUtil.generateNonce())
+                                    .build())
+                            .build())
+                    .extensions(Map.of())
+                    .build();
+        } else {
+            throw new IllegalArgumentException("Unsupported payment scheme: " + paymentRequirements.scheme());
+        }
     }
 
     /**
