@@ -2,12 +2,14 @@ package tech.mogami.java.client;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.Strings;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.crypto.signature.EIP712Helper;
 import tech.mogami.commons.payment.PaymentPayload;
 import tech.mogami.commons.payment.PaymentRequired;
 import tech.mogami.commons.payment.PaymentRequirements;
+import tech.mogami.commons.payment.SettlementResponse;
 import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.commons.util.Base64Util;
 import tech.mogami.commons.util.JsonUtil;
@@ -17,8 +19,10 @@ import tech.mogami.commons.util.ValidationUtil;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_REQUIRED_HEADER;
+import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_RESPONSE_HEADER;
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_HEADER;
 import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
 import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
@@ -39,7 +43,7 @@ public class X402V2Client {
      */
     public List<PaymentRequirements> fetchPaymentRequirements(final Map<String, String> headers) {
         // We look for the PAYMENT-REQUIRED header and retrieve the payment requirements encoded there.
-        final String encodedPaymentRequired = headers.get(X402_PAYMENT_REQUIRED_HEADER);
+        final String encodedPaymentRequired = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_REQUIRED_HEADER);
         if (encodedPaymentRequired == null) {
             return List.of();
         }
@@ -141,6 +145,38 @@ public class X402V2Client {
                 X402_PAYMENT_SIGNATURE_HEADER,
                 Base64Util.encode(JsonUtil.toJson(signedPaymentPayload))
         );
+    }
+
+    /**
+     * Retrieves the SettlementResponse from the given headers.
+     *
+     * @param headers The headers to retrieve the SettlementResponse from.
+     * @return An Optional containing the SettlementResponse if present.
+     */
+    public Optional<SettlementResponse> fetchSettlementResponse(final Map<String, String> headers) {
+        // We look for the PAYMENT-RESPONSE header and retrieve the settlement response encoded there.
+        final String encodedPaymentResponse = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_RESPONSE_HEADER);
+        if (encodedPaymentResponse == null) {
+            return Optional.empty();
+        }
+
+        // We decode it.
+        final String decodedPaymentResponse;
+        try {
+            decodedPaymentResponse = Base64Util.decode(encodedPaymentResponse);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Error during base64 decode for payment-response header", e);
+        }
+
+        // We transform the encoded value into a SettlementResponse object.
+        final SettlementResponse settlementResponse;
+        try {
+            settlementResponse = JsonUtil.fromJson(decodedPaymentResponse, SettlementResponse.class);
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("Failed to decode payment-response header", e);
+        }
+
+        return Optional.of(settlementResponse);
     }
 
 }

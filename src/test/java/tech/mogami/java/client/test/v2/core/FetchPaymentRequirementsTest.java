@@ -47,12 +47,12 @@ public class FetchPaymentRequirementsTest extends BaseTest {
         Map<String, String> finalHeaders1 = headers;
         assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders1))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Error during base64 decode for PAYMENT-REQUIRED header");
+                .hasMessageContaining("Error during base64 decode for payment-required header");
 
         // With PAYMENT-REQUIRED but empty JSON ========================================================================
         headers = new HashMap<>(Map.of(
                 "Some-Header", "Some-Value",
-                X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequiredWithInvalidJson(),
+                X402_PAYMENT_REQUIRED_HEADER, getEmptyJson(),
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
         Map<String, String> finalHeaders2 = headers;

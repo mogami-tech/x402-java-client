@@ -77,7 +77,19 @@ public class PaymentTest {
                         .build();
                 try (Response paidResponse = CLIENT.newCall(paidRequest).execute()) {
 
+                    // Checking the response header.
+                    // TODO Fix when https://github.com/coinbase/x402/issues/836 will be resolved
+//                    headers = paidResponse.headers().toMultimap()
+//                            .entrySet().stream()
+//                            .filter(e -> !e.getValue().isEmpty())
+//                            .peek(e -> System.out.println("Header: " + e.getKey() + " = " + e.getValue().getFirst()))
+//                            .collect(toMap(Map.Entry::getKey, e -> e.getValue().getFirst()));
+//                    X402V2Client.fetchSettlementResponse(headers).ifPresentOrElse(
+//                            settlementResponse -> System.out.println("✅ Settlement response received: " + settlementResponse),
+//                            () -> fail("No settlement response found in the paid request headers.")
+//                    );
 
+                    // Checking the response body.
                     assertThat(paidResponse).isNotNull();
                     assertThat(paidResponse.isSuccessful()).isTrue();
                     assertThat(paidResponse.body()).isNotNull();
