@@ -2,6 +2,7 @@ package tech.mogami.java.client.v2.core;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.web3j.crypto.Credentials;
 import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
 import tech.mogami.commons.test.BaseTest;
 import tech.mogami.java.client.v2.X402Client;
@@ -20,34 +21,28 @@ import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 
-@DisplayName("X402Client createPaymentPayload() tests")
-public class CreatePaymentPayloadTest extends BaseTest {
+@DisplayName("X402Client SignPaymentPayloadTest() tests")
+public class SignPaymentPayloadTest extends BaseTest {
 
     @Test
     @DisplayName("Method execution")
     public void execute() {
-        // Getting payments requirements ===============================================================================
-        var paymentRequirementsList = X402Client.fetchPaymentRequirements(Map.of(X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequired()));
-        assertThat(paymentRequirementsList)
-                .hasSize(1)
-                .first()
-                .satisfies(paymentRequirements -> {
-                    assertThat(paymentRequirements.scheme()).isEqualTo(EXACT_SCHEME.name());
-                    assertThat(paymentRequirements.network()).isEqualTo(BASE_SEPOLIA.networkId());
-                    assertThat(paymentRequirements.amount()).isEqualTo("10000");
-                    assertThat(paymentRequirements.asset()).isEqualTo(BASE_SEPOLIA_USDC_CONTRACT);
-                    assertThat(paymentRequirements.payTo()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
-                    assertThat(paymentRequirements.maxTimeoutSeconds()).isEqualTo(60);
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_NAME)).isPresent();
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_NAME)).get().isEqualTo("USDC");
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).isPresent();
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).get().isEqualTo("2");
-                });
+        var paymentRequirementsList = X402Client.fetchPaymentRequirements(
+                Map.of(X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequired())
+        );
 
-        // Creating payment payload ====================================================================================
+        var paymentPayload = X402Client.createPaymentPayload(
+                paymentRequirementsList.getFirst(),
+                TEST_CLIENT_WALLET_ADDRESS_1
+        );
+
         var now = Instant.now();
-        var paymentPayload = X402Client.createPaymentPayload(paymentRequirementsList.getFirst(), TEST_CLIENT_WALLET_ADDRESS_1);
-        assertThat(paymentPayload)
+        var signedPaymentPayload = X402Client.signPaymentPayload(
+                paymentRequirementsList.getFirst(),
+                paymentPayload,
+                Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY)
+        );
+        assertThat(signedPaymentPayload)
                 .isNotNull()
                 .satisfies(payload -> {
                     assertThat(payload.x402Version().equals(X402_SUPPORTED_VERSION_BY_MOGAMI.version()));
@@ -66,7 +61,7 @@ public class CreatePaymentPayloadTest extends BaseTest {
                     });
                     assertThat(payload.payload())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
-                                assertThat(exactSchemePayload.signature()).isNull();
+                                assertThat(exactSchemePayload.signature()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
                                 assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
                                 assertThat(exactSchemePayload.authorization().value()).isEqualTo("10000");
@@ -89,4 +84,5 @@ public class CreatePaymentPayloadTest extends BaseTest {
                     assertThat(paymentPayload.extensions()).isEmpty();
                 });
     }
+
 }

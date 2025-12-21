@@ -1,7 +1,10 @@
 package tech.mogami.java.client.v2;
 
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.Strings;
 import org.web3j.crypto.Credentials;
+import tech.mogami.commons.crypto.signature.EIP712Helper;
 import tech.mogami.commons.payment.PaymentPayload;
 import tech.mogami.commons.payment.PaymentRequired;
 import tech.mogami.commons.payment.PaymentRequirements;
@@ -79,10 +82,11 @@ public class X402Client {
      */
     public PaymentPayload createPaymentPayload(final PaymentRequirements paymentRequirements,
                                                final String fromAddress) {
-        if (paymentRequirements.scheme().equals(EXACT_SCHEME.name())) {
+        if (Strings.CI.equals(paymentRequirements.scheme(), EXACT_SCHEME.name())) {
             long now = Instant.now().getEpochSecond();
             return PaymentPayload.builder()
                     .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
+                    .resource(null)
                     .accepted(paymentRequirements)
                     .payload(ExactSchemePayload.builder()
                             .signature(null)
@@ -110,11 +114,19 @@ public class X402Client {
      * @param credentials          The credentials to use for signing.
      * @return A signed PaymentPayload.
      */
+    @SneakyThrows
     public PaymentPayload signPaymentPayload(final PaymentRequirements paymentsRequirements,
                                              final PaymentPayload paymentPayload,
                                              final Credentials credentials) {
-        // Implementation goes here
-        return null;
+        // We change the signature field in the payload with the one signed by the user.
+        ExactSchemePayload payload = ((ExactSchemePayload) paymentPayload.payload()).toBuilder()
+                .signature(EIP712Helper.sign(credentials, paymentsRequirements, paymentPayload))
+                .build();
+
+        // We return the payment payload with the new payload.
+        return paymentPayload.toBuilder()
+                .payload(payload)
+                .build();
     }
 
     /**
