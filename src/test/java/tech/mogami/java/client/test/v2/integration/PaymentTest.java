@@ -90,6 +90,7 @@ public class PaymentTest {
 //                    );
 
                     // Checking the response body.
+                    System.out.println("Server response: " + paidResponse);
                     assertThat(paidResponse).isNotNull();
                     assertThat(paidResponse.isSuccessful()).isTrue();
                     assertThat(paidResponse.body()).isNotNull();
