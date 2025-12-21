@@ -1,4 +1,4 @@
-package tech.mogami.java.client.v2;
+package tech.mogami.java.client;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
@@ -19,16 +19,17 @@ import java.util.List;
 import java.util.Map;
 
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_REQUIRED_HEADER;
+import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_HEADER;
 import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
 import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 
 /**
- * Version 2 of the Mogami Java client.
+ * Mogami Java client X402 V2.
  * All public APIs in this package are non-null by default.
  */
 @UtilityClass
 @SuppressWarnings({"HideUtilityClassConstructor", "unused"})
-public class X402Client {
+public class X402V2Client {
 
     /**
      * Fetches payment requirements from the given headers.
@@ -136,8 +137,10 @@ public class X402Client {
      * @return A map of payment headers.
      */
     public Map<String, String> buildPaymentHeaders(final PaymentPayload signedPaymentPayload) {
-        // Implementation goes here
-        return null;
+        return Map.of(
+                X402_PAYMENT_SIGNATURE_HEADER,
+                Base64Util.encode(JsonUtil.toJson(signedPaymentPayload))
+        );
     }
 
 }

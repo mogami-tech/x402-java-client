@@ -1,5 +1,5 @@
 /**
- * x402 java client by Mogami.
+ * This package contains the version 2 of the Mogami Java client.
  */
 @NullMarked
 package tech.mogami.java.client;
