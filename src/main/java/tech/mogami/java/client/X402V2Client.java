@@ -3,7 +3,7 @@ package tech.mogami.java.client;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.crypto.signature.EIP712Helper;
 import tech.mogami.commons.payment.PaymentPayload;
@@ -97,7 +97,7 @@ public class X402V2Client {
      */
     public PaymentPayload createPaymentPayload(final PaymentRequirements paymentRequirements,
                                                final String fromAddress) {
-        if (Strings.CI.equals(paymentRequirements.scheme(), EXACT_SCHEME.name())) {
+        if (StringUtils.equalsIgnoreCase(paymentRequirements.scheme(), EXACT_SCHEME.name())) {
             long now = Instant.now().getEpochSecond();
             return PaymentPayload.builder()
                     .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
