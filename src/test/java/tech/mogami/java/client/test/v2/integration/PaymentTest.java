@@ -14,14 +14,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.stream.Collectors.toMap;
+import static org.apache.http.HttpStatus.SC_PAYMENT_REQUIRED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_HEADER;
 import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1;
 import static tech.mogami.commons.test.BaseTestData.TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY;
 
-@DisplayName("X402Client payment integration tests")
+@DisplayName("Payment integration tests")
 public class PaymentTest {
 
     /** OkHttpClient instance for making HTTP requests */
@@ -39,16 +39,12 @@ public class PaymentTest {
                 .build();
         try (Response initialResponse = CLIENT.newCall(initialRequest).execute()) {
             // Check if the response indicates a payment is required (e.g., HTTP 402)
-            if (initialResponse.code() == 402) {
+            if (initialResponse.code() == SC_PAYMENT_REQUIRED) {
 
                 // We make a payment ===================================================================================
 
                 // Extracting the payments requirements from the header.
-                Map<String, String> headers = initialResponse.headers().toMultimap()
-                        .entrySet().stream()
-                        .filter(e -> !e.getValue().isEmpty())
-                        .collect(toMap(Map.Entry::getKey, e -> e.getValue().getFirst()));
-                List<PaymentRequirements> requirements = X402V2Client.fetchPaymentRequirements(headers);
+                List<PaymentRequirements> requirements = X402V2Client.fetchPaymentRequirements(getHeaders(initialResponse));
                 if (requirements.isEmpty()) {
                     fail("No payment requirements found in the response headers.");
                 }
@@ -105,6 +101,13 @@ public class PaymentTest {
             fail("IOException during HTTP request to " + url + ": " + e.getMessage());
         }
 
+    }
+
+    private Map<String, String> getHeaders(Response response) {
+        return response.headers().toMultimap()
+                .entrySet().stream()
+                .filter(e -> !e.getValue().isEmpty())
+                .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getFirst()));
     }
 
 }

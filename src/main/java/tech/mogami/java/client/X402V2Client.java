@@ -36,16 +36,17 @@ import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 public class X402V2Client {
 
     /**
-     * Fetches payment requirements from the given headers.
+     * Fetches the PaymentRequired from the given headers.
+     * TODO Add a test to this method.
      *
-     * @param headers The headers to fetch payment requirements from.
-     * @return A list of PaymentRequirements.
+     * @param headers The headers to fetch the PaymentRequired from.
+     * @return An Optional containing the PaymentRequired if present.
      */
-    public List<PaymentRequirements> fetchPaymentRequirements(final Map<String, String> headers) {
+    public Optional<PaymentRequired> fetchPaymentRequired(final Map<String, String> headers) {
         // We look for the PAYMENT-REQUIRED header and retrieve the payment requirements encoded there.
         final String encodedPaymentRequired = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_REQUIRED_HEADER);
         if (encodedPaymentRequired == null) {
-            return List.of();
+            return Optional.empty();
         }
 
         // We decode it.
@@ -74,8 +75,17 @@ public class X402V2Client {
             throw new IllegalArgumentException("Invalid PaymentRequired: " + v.getPropertyPath() + " " + v.getMessage());
         });
 
-        // We return the payment requirements.
-        return paymentRequired.accepts();
+        return Optional.of(paymentRequired);
+    }
+
+    /**
+     * Fetches payment requirements from the given headers.
+     *
+     * @param headers The headers to fetch payment requirements from.
+     * @return A list of PaymentRequirements.
+     */
+    public List<PaymentRequirements> fetchPaymentRequirements(final Map<String, String> headers) {
+        return fetchPaymentRequired(headers).map(PaymentRequired::accepts).orElse(List.of());
     }
 
     /**
