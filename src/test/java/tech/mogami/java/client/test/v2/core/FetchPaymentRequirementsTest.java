@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tech.mogami.commons.exception.X402Exception;
-import tech.mogami.commons.test.BaseTest;
+import tech.mogami.commons.test.BaseMogamiTest;
 import tech.mogami.java.client.X402V2Client;
 
 import java.util.HashMap;
@@ -22,7 +22,7 @@ import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXA
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 
 @DisplayName("X402Client fetchPaymentRequirements() tests")
-public class FetchPaymentRequirementsTest extends BaseTest {
+public class FetchPaymentRequirementsTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
-import tech.mogami.commons.test.BaseTest;
+import tech.mogami.commons.test.BaseMogamiTest;
 import tech.mogami.java.client.X402V2Client;
 
 import java.time.Instant;
@@ -22,7 +22,7 @@ import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXA
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 
 @DisplayName("X402Client SignPaymentPayloadTest() tests")
-public class SignPaymentPayloadTest extends BaseTest {
+public class SignPaymentPayloadTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")

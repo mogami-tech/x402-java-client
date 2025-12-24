@@ -3,7 +3,7 @@ package tech.mogami.java.client.test.v2.core;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
-import tech.mogami.commons.test.BaseTest;
+import tech.mogami.commons.test.BaseMogamiTest;
 import tech.mogami.java.client.X402V2Client;
 
 import java.time.Instant;
@@ -21,7 +21,7 @@ import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXA
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 
 @DisplayName("X402Client createPaymentPayload() tests")
-public class CreatePaymentPayloadTest extends BaseTest {
+public class CreatePaymentPayloadTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")

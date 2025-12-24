@@ -5,7 +5,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tech.mogami.commons.exception.InvalidX402HeaderException;
-import tech.mogami.commons.test.BaseTest;
+import tech.mogami.commons.test.BaseMogamiTest;
 import tech.mogami.java.client.X402V2Client;
 
 import java.util.HashMap;
@@ -19,7 +19,7 @@ import static tech.mogami.commons.constant.X402Error.INSUFFICIENT_FUNDS;
 import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
 
 @DisplayName("X402Client fetchSettlementResponseTest() tests")
-public class FetchSettlementResponseTest extends BaseTest {
+public class FetchSettlementResponseTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")
