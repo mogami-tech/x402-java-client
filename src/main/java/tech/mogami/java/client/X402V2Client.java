@@ -6,15 +6,14 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.crypto.signature.EIP712Helper;
+import tech.mogami.commons.exception.InvalidX402HeaderException;
 import tech.mogami.commons.payment.PaymentPayload;
 import tech.mogami.commons.payment.PaymentRequired;
 import tech.mogami.commons.payment.PaymentRequirements;
 import tech.mogami.commons.payment.SettlementResponse;
 import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
-import tech.mogami.commons.util.Base64Util;
-import tech.mogami.commons.util.JsonUtil;
 import tech.mogami.commons.util.NonceUtil;
-import tech.mogami.commons.util.ValidationUtil;
+import tech.mogami.commons.util.X402HeaderUtil;
 
 import java.time.Instant;
 import java.util.List;
@@ -37,7 +36,6 @@ public class X402V2Client {
 
     /**
      * Fetches the PaymentRequired from the given headers.
-     * TODO Add a test to this method.
      *
      * @param headers The headers to fetch the PaymentRequired from.
      * @return An Optional containing the PaymentRequired if present.
@@ -47,35 +45,14 @@ public class X402V2Client {
         final String encodedPaymentRequired = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_REQUIRED_HEADER);
         if (encodedPaymentRequired == null) {
             return Optional.empty();
+        } else {
+            // Check supported version.
+            final PaymentRequired paymentRequired = X402HeaderUtil.decodePaymentRequired(encodedPaymentRequired);
+            if (!paymentRequired.isSupportedVersion()) {
+                throw new InvalidX402HeaderException("Unsupported x402 version: " + paymentRequired.x402Version());
+            }
+            return Optional.of(paymentRequired);
         }
-
-        // We decode it.
-        final String decodedPaymentRequired;
-        try {
-            decodedPaymentRequired = Base64Util.decode(encodedPaymentRequired);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Error during base64 decode for " + X402_PAYMENT_REQUIRED_HEADER + " header", e);
-        }
-
-        // We transform the encoded value into a PaymentRequired object.
-        final PaymentRequired paymentRequired;
-        try {
-            paymentRequired = JsonUtil.fromJson(decodedPaymentRequired, PaymentRequired.class);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalArgumentException("Failed to decode " + X402_PAYMENT_REQUIRED_HEADER + " header", e);
-        }
-
-        // We check if we are working on the right release.
-        if (!paymentRequired.isSupportedVersion()) {
-            throw new IllegalArgumentException("Unsupported x402 version: " + paymentRequired.x402Version());
-        }
-
-        // We check if the JSON data is valid.
-        ValidationUtil.findViolations(paymentRequired).stream().findFirst().ifPresent(v -> {
-            throw new IllegalArgumentException("Invalid PaymentRequired: " + v.getPropertyPath() + " " + v.getMessage());
-        });
-
-        return Optional.of(paymentRequired);
     }
 
     /**
@@ -85,7 +62,9 @@ public class X402V2Client {
      * @return A list of PaymentRequirements.
      */
     public List<PaymentRequirements> fetchPaymentRequirements(final Map<String, String> headers) {
-        return fetchPaymentRequired(headers).map(PaymentRequired::accepts).orElse(List.of());
+        return fetchPaymentRequired(headers)
+                .map(PaymentRequired::accepts)
+                .orElse(List.of());
     }
 
     /**
@@ -153,7 +132,7 @@ public class X402V2Client {
     public Map<String, String> buildPaymentHeaders(final PaymentPayload signedPaymentPayload) {
         return Map.of(
                 X402_PAYMENT_SIGNATURE_HEADER,
-                Base64Util.encode(JsonUtil.toJson(signedPaymentPayload))
+                X402HeaderUtil.encodePaymentPayload(signedPaymentPayload)
         );
     }
 
@@ -168,25 +147,9 @@ public class X402V2Client {
         final String encodedPaymentResponse = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_RESPONSE_HEADER);
         if (encodedPaymentResponse == null) {
             return Optional.empty();
+        } else {
+            return Optional.of(X402HeaderUtil.decodeSettlementResponse(encodedPaymentResponse));
         }
-
-        // We decode it.
-        final String decodedPaymentResponse;
-        try {
-            decodedPaymentResponse = Base64Util.decode(encodedPaymentResponse);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Error during base64 decode for payment-response header", e);
-        }
-
-        // We transform the encoded value into a SettlementResponse object.
-        final SettlementResponse settlementResponse;
-        try {
-            settlementResponse = JsonUtil.fromJson(decodedPaymentResponse, SettlementResponse.class);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalArgumentException("Failed to decode payment-response header", e);
-        }
-
-        return Optional.of(settlementResponse);
     }
 
 }

@@ -4,6 +4,7 @@ package tech.mogami.java.client.test.v2.core;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tech.mogami.commons.exception.InvalidX402HeaderException;
 import tech.mogami.commons.test.BaseTest;
 import tech.mogami.java.client.X402V2Client;
 
@@ -41,8 +42,8 @@ public class FetchSettlementResponseTest extends BaseTest {
         ));
         Map<String, String> finalHeaders1 = headers;
         assertThatThrownBy(() -> X402V2Client.fetchSettlementResponse(finalHeaders1))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Error during base64 decode for payment-response header");
+                .isInstanceOf(InvalidX402HeaderException.class)
+                .hasMessageContaining("Invalid base64 payment-response header");
 
         // With PAYMENT-RESPONSE but empty JSON ========================================================================
         headers = new HashMap<>(Map.of(

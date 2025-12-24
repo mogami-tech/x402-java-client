@@ -69,7 +69,7 @@ public class BuildPaymentHeadersTest extends BaseTest {
                         assertThat(p.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).isPresent();
                         assertThat(p.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).get().isEqualTo("2");
                     });
-                    assertThat(payload.payload())
+                    assertThat(payload.getPayloadAs())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                                 assertThat(exactSchemePayload.signature()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);

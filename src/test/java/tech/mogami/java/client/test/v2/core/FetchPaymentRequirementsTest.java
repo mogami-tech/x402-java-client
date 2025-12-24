@@ -3,6 +3,7 @@ package tech.mogami.java.client.test.v2.core;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tech.mogami.commons.exception.X402Exception;
 import tech.mogami.commons.test.BaseTest;
 import tech.mogami.java.client.X402V2Client;
 
@@ -46,8 +47,8 @@ public class FetchPaymentRequirementsTest extends BaseTest {
         ));
         Map<String, String> finalHeaders1 = headers;
         assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders1))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Error during base64 decode for payment-required header");
+                .isInstanceOf(X402Exception.class)
+                .hasMessageContaining("Invalid base64 payment-required header");
 
         // With PAYMENT-REQUIRED but empty JSON ========================================================================
         headers = new HashMap<>(Map.of(
@@ -57,8 +58,8 @@ public class FetchPaymentRequirementsTest extends BaseTest {
         ));
         Map<String, String> finalHeaders2 = headers;
         assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders2))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Unsupported x402 version: ");
+                .isInstanceOf(X402Exception.class)
+                .hasMessageContaining("Invalid x402 payment requirements");
 
         // With valid PAYMENT-REQUIRED but invalid version =============================================================
         headers = new HashMap<>(Map.of(
@@ -68,7 +69,7 @@ public class FetchPaymentRequirementsTest extends BaseTest {
         ));
         Map<String, String> finalHeaders3 = headers;
         assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders3))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(X402Exception.class)
                 .hasMessageContaining("Unsupported x402 version: 1");
 
         // With PAYMENT-REQUIRED but no accepts ========================================================================
@@ -79,8 +80,8 @@ public class FetchPaymentRequirementsTest extends BaseTest {
         ));
         Map<String, String> finalHeaders4 = headers;
         assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders4))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("accepts Payment requirements in payment payload is required");
+                .isInstanceOf(X402Exception.class)
+                .hasMessageContaining("Invalid x402 payment requirements");
 
         // With valid PAYMENT-REQUIRED =================================================================================
         headers = new HashMap<>(Map.of(
