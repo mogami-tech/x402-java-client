@@ -3,7 +3,9 @@ package tech.mogami.java.client;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.crypto.signature.EIP712Helper;
 import tech.mogami.commons.exception.InvalidX402HeaderException;
@@ -16,7 +18,6 @@ import tech.mogami.commons.util.NonceUtil;
 import tech.mogami.commons.util.X402HeaderUtil;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -35,92 +36,63 @@ import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 public class X402V2Client {
 
     /**
-     * Fetches the PaymentRequired from the given headers.
+     * Extract the PaymentRequired from the given headers.
      *
      * @param headers The headers to fetch the PaymentRequired from.
      * @return An Optional containing the PaymentRequired if present.
      */
-    public Optional<PaymentRequired> fetchPaymentRequired(final Map<String, String> headers) {
-        // We look for the PAYMENT-REQUIRED header and retrieve the payment requirements encoded there.
-        final String encodedPaymentRequired = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_REQUIRED_HEADER);
-        if (encodedPaymentRequired == null) {
-            return Optional.empty();
-        } else {
-            // Check supported version.
-            final PaymentRequired paymentRequired = X402HeaderUtil.decodePaymentRequired(encodedPaymentRequired);
-            if (!paymentRequired.isSupportedVersion()) {
-                throw new InvalidX402HeaderException("Unsupported x402 version: " + paymentRequired.x402Version());
-            }
-            return Optional.of(paymentRequired);
-        }
+    public Optional<PaymentRequired> extractPaymentRequired(final Map<String, String> headers) {
+        return Optional.ofNullable(getHeaderIgnoreCase(headers, X402_PAYMENT_REQUIRED_HEADER))
+                .map(X402HeaderUtil::decodePaymentRequired)
+                .map(paymentRequired -> {
+                    if (!paymentRequired.isSupportedVersion()) {
+                        throw new InvalidX402HeaderException(
+                                "Unsupported x402 version: " + paymentRequired.x402Version()
+                        );
+                    }
+                    return paymentRequired;
+                });
     }
 
     /**
-     * Fetches payment requirements from the given headers.
+     * Build a signed payment payload based on the given PaymentRequirements and fromAddress.
      *
-     * @param headers The headers to fetch payment requirements from.
-     * @return A list of PaymentRequirements.
-     */
-    public List<PaymentRequirements> fetchPaymentRequirements(final Map<String, String> headers) {
-        return fetchPaymentRequired(headers)
-                .map(PaymentRequired::accepts)
-                .orElse(List.of());
-    }
-
-    /**
-     * Creates a PaymentPayload based on the given PaymentRequirements and fromAddress.
-     *
-     * @param paymentRequirements The payment requirements.
-     * @param fromAddress         The address from which the payment is made.
+     * @param paymentRequired             The payment required.
+     * @param paymentRequirementsSelected The payment requirements.
+     * @param credentials                 The credentials to derive the fromAddress.
      * @return A PaymentPayload object.
      */
-    public PaymentPayload createPaymentPayload(final PaymentRequirements paymentRequirements,
-                                               final String fromAddress) {
-        if (StringUtils.equalsIgnoreCase(paymentRequirements.scheme(), EXACT_SCHEME.name())) {
+    @SneakyThrows
+    public PaymentPayload buildPaymentPayload(final PaymentRequired paymentRequired,
+                                              final PaymentRequirements paymentRequirementsSelected,
+                                              final Credentials credentials) {
+        if (StringUtils.equalsIgnoreCase(paymentRequirementsSelected.scheme(), EXACT_SCHEME.name())) {
+            // Creates an exactSchemePayloadAuthorization.
             long now = Instant.now().getEpochSecond();
+            long validBefore = now + paymentRequirementsSelected.maxTimeoutSeconds();
+            ExactSchemePayload.Authorization exactSchemePayloadAuthorization = ExactSchemePayload.Authorization.builder()
+                    .from(credentials.getAddress())
+                    .to(paymentRequirementsSelected.payTo())
+                    .value(paymentRequirementsSelected.amount())
+                    .validAfter(Long.toString(now))
+                    .validBefore(Long.toString(validBefore))
+                    .nonce(NonceUtil.generateNonce())
+                    .build();
+
+            // Returns the object.
             return PaymentPayload.builder()
                     .x402Version(X402_SUPPORTED_VERSION_BY_MOGAMI.version())
-                    .resource(null)
-                    .accepted(paymentRequirements)
+                    .resource(paymentRequired.resource())
+                    .accepted(paymentRequirementsSelected)
                     .payload(ExactSchemePayload.builder()
-                            .signature(null)
-                            .authorization(ExactSchemePayload.Authorization.builder()
-                                    .from(fromAddress)
-                                    .to(paymentRequirements.payTo())
-                                    .value(paymentRequirements.amount())
-                                    .validAfter(Long.toString(now))
-                                    .validBefore(Long.toString(now + paymentRequirements.maxTimeoutSeconds()))
-                                    .nonce(NonceUtil.generateNonce())
-                                    .build())
+                            .signature(EIP712Helper.sign(credentials, paymentRequirementsSelected, exactSchemePayloadAuthorization))
+                            .authorization(exactSchemePayloadAuthorization)
                             .build())
-                    .extensions(Map.of())
+                    .extensions(ObjectUtils.firstNonNull(paymentRequired.extensions(), Map.of()))
                     .build();
         } else {
-            throw new IllegalArgumentException("Unsupported payment scheme: " + paymentRequirements.scheme());
+            throw new IllegalArgumentException("Unsupported payment scheme: " + paymentRequirementsSelected.scheme());
         }
-    }
-
-    /**
-     * Signs the given PaymentPayload using the provided credentials.
-     *
-     * @param paymentsRequirements The payment requirements.
-     * @param paymentPayload       The payment payload to sign.
-     * @param credentials          The credentials to use for signing.
-     * @return A signed PaymentPayload.
-     */
-    @SneakyThrows
-    public PaymentPayload signPaymentPayload(final PaymentRequirements paymentsRequirements,
-                                             final PaymentPayload paymentPayload,
-                                             final Credentials credentials) {
-        // We change the signature field in the payload with the one signed by the user.
-        ExactSchemePayload payload = ((ExactSchemePayload) paymentPayload.payload()).toBuilder()
-                .signature(EIP712Helper.sign(credentials, paymentsRequirements, paymentPayload))
-                .build();
-
-        // We return the payment payload with the new payload.
-        return paymentPayload.toBuilder()
-                .payload(payload)
-                .build();
     }
 
     /**
@@ -137,19 +109,29 @@ public class X402V2Client {
     }
 
     /**
-     * Retrieves the SettlementResponse from the given headers.
+     * Extract the SettlementResponse from the given headers.
      *
      * @param headers The headers to retrieve the SettlementResponse from.
      * @return An Optional containing the SettlementResponse if present.
      */
-    public Optional<SettlementResponse> fetchSettlementResponse(final Map<String, String> headers) {
-        // We look for the PAYMENT-RESPONSE header and retrieve the settlement response encoded there.
-        final String encodedPaymentResponse = new CaseInsensitiveMap<>(headers).get(X402_PAYMENT_RESPONSE_HEADER);
-        if (encodedPaymentResponse == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(X402HeaderUtil.decodeSettlementResponse(encodedPaymentResponse));
+    public Optional<SettlementResponse> extractSettlementResponse(final Map<String, String> headers) {
+        return Optional.ofNullable(getHeaderIgnoreCase(headers, X402_PAYMENT_RESPONSE_HEADER))
+                .map(X402HeaderUtil::decodeSettlementResponse);
+    }
+
+    /**
+     * Retrieves a header value from the headers map in a case-insensitive manner.
+     *
+     * @param headers    The map of headers.
+     * @param headerName The name of the header to retrieve.
+     * @return The header value if found, otherwise null.
+     */
+    private @Nullable String getHeaderIgnoreCase(@Nullable final Map<String, String> headers,
+                                                 @Nullable final String headerName) {
+        if (headers == null || headerName == null) {
+            return null;
         }
+        return new CaseInsensitiveMap<>(headers).get(headerName);
     }
 
 }

@@ -7,18 +7,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
 import tech.mogami.commons.payment.PaymentPayload;
-import tech.mogami.commons.payment.PaymentRequirements;
 import tech.mogami.java.client.X402V2Client;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import static org.apache.http.HttpStatus.SC_PAYMENT_REQUIRED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_HEADER;
-import static tech.mogami.commons.test.BaseMogamiTestData.TEST_CLIENT_WALLET_ADDRESS_1;
 import static tech.mogami.commons.test.BaseMogamiTestData.TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY;
 
 @DisplayName("Payment integration tests")
@@ -44,23 +41,20 @@ public class PaymentTest {
                 // We make a payment ===================================================================================
 
                 // Extracting the payments requirements from the header.
-                List<PaymentRequirements> requirements = X402V2Client.fetchPaymentRequirements(getHeaders(initialResponse));
-                if (requirements.isEmpty()) {
-                    fail("No payment requirements found in the response headers.");
+                var paymentRequired = X402V2Client.extractPaymentRequired(getHeaders(initialResponse))
+                        .orElseThrow(() -> new IllegalStateException("PaymentRequired should be present"));
+                if (paymentRequired.accepts().isEmpty()) {
+                    fail("No payment requirements found in the response headers");
                 }
 
                 // Payload creation.
-                PaymentPayload payload = X402V2Client.createPaymentPayload(requirements.getFirst(), TEST_CLIENT_WALLET_ADDRESS_1);
-
-                // Signing the payload.
-                var signedPayload = X402V2Client.signPaymentPayload(
-                        requirements.getFirst(),
-                        payload,
-                        Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY)
-                );
+                PaymentPayload payload = X402V2Client.buildPaymentPayload(
+                        paymentRequired,
+                        paymentRequired.accepts().getFirst(),
+                        Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY));
 
                 // Building the payment headers.
-                Map<String, String> paymentHeaders = X402V2Client.buildPaymentHeaders(signedPayload);
+                Map<String, String> paymentHeaders = X402V2Client.buildPaymentHeaders(payload);
 
                 // We make the paid request ============================================================================
                 Request paidRequest = new Request.Builder()
@@ -80,7 +74,7 @@ public class PaymentTest {
 //                            .filter(e -> !e.getValue().isEmpty())
 //                            .peek(e -> System.out.println("Header: " + e.getKey() + " = " + e.getValue().getFirst()))
 //                            .collect(toMap(Map.Entry::getKey, e -> e.getValue().getFirst()));
-//                    X402V2Client.fetchSettlementResponse(headers).ifPresentOrElse(
+//                    X402V2Client.extractSettlementResponse(headers).ifPresentOrElse(
 //                            settlementResponse -> System.out.println("✅ Settlement response received: " + settlementResponse),
 //                            () -> fail("No settlement response found in the paid request headers.")
 //                    );

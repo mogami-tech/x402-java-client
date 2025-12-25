@@ -15,21 +15,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_REQUIRED_HEADER;
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_RESPONSE_HEADER;
 import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_HEADER;
-import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
-import static tech.mogami.commons.constant.network.contract.BaseContracts.BASE_SEPOLIA_USDC_CONTRACT;
-import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
-import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
-import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
+import static tech.mogami.commons.constant.version.X402Versions.X402_SUPPORTED_VERSION_BY_MOGAMI;
 
-@DisplayName("X402Client fetchPaymentRequirements() tests")
-public class FetchPaymentRequirementsTest extends BaseMogamiTest {
+@DisplayName("X402Client extractPaymentRequired() tests")
+public class ExtractPaymentRequiredTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")
     void execute() {
         // No headers ==================================================================================================
         Map<String, String> headers = Map.of();
-        Assertions.assertThat(X402V2Client.fetchPaymentRequirements(headers)).isEmpty();
+        Assertions.assertThat(X402V2Client.extractPaymentRequired(headers)).isEmpty();
 
         // Some headers but without PAYMENT-REQUIRED ===================================================================
         headers = new HashMap<>(Map.of(
@@ -37,7 +33,7 @@ public class FetchPaymentRequirementsTest extends BaseMogamiTest {
                 X402_PAYMENT_SIGNATURE_HEADER, "Some-Signature",
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
-        assertThat(X402V2Client.fetchPaymentRequirements(headers)).isEmpty();
+        assertThat(X402V2Client.extractPaymentRequired(headers)).isEmpty();
 
         // With PAYMENT-REQUIRED but the encoded value is invalid ======================================================
         headers = new HashMap<>(Map.of(
@@ -46,7 +42,7 @@ public class FetchPaymentRequirementsTest extends BaseMogamiTest {
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
         Map<String, String> finalHeaders1 = headers;
-        assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders1))
+        assertThatThrownBy(() -> X402V2Client.extractPaymentRequired(finalHeaders1))
                 .isInstanceOf(X402Exception.class)
                 .hasMessageContaining("Invalid base64 payment-required header");
 
@@ -57,7 +53,7 @@ public class FetchPaymentRequirementsTest extends BaseMogamiTest {
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
         Map<String, String> finalHeaders2 = headers;
-        assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders2))
+        assertThatThrownBy(() -> X402V2Client.extractPaymentRequired(finalHeaders2))
                 .isInstanceOf(X402Exception.class)
                 .hasMessageContaining("Invalid x402 payment requirements");
 
@@ -68,7 +64,7 @@ public class FetchPaymentRequirementsTest extends BaseMogamiTest {
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
         Map<String, String> finalHeaders3 = headers;
-        assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders3))
+        assertThatThrownBy(() -> X402V2Client.extractPaymentRequired(finalHeaders3))
                 .isInstanceOf(X402Exception.class)
                 .hasMessageContaining("Unsupported x402 version: 1");
 
@@ -79,7 +75,7 @@ public class FetchPaymentRequirementsTest extends BaseMogamiTest {
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
         Map<String, String> finalHeaders4 = headers;
-        assertThatThrownBy(() -> X402V2Client.fetchPaymentRequirements(finalHeaders4))
+        assertThatThrownBy(() -> X402V2Client.extractPaymentRequired(finalHeaders4))
                 .isInstanceOf(X402Exception.class)
                 .hasMessageContaining("Invalid x402 payment requirements");
 
@@ -89,20 +85,32 @@ public class FetchPaymentRequirementsTest extends BaseMogamiTest {
                 X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequired(),
                 X402_PAYMENT_RESPONSE_HEADER, "Some-Response"
         ));
-        assertThat(X402V2Client.fetchPaymentRequirements(headers))
-                .hasSize(1)
-                .first()
-                .satisfies(paymentRequirements -> {
-                    assertThat(paymentRequirements.scheme()).isEqualTo(EXACT_SCHEME.name());
-                    assertThat(paymentRequirements.network()).isEqualTo(BASE_SEPOLIA.networkId());
-                    assertThat(paymentRequirements.amount()).isEqualTo("10000");
-                    assertThat(paymentRequirements.asset()).isEqualTo(BASE_SEPOLIA_USDC_CONTRACT);
-                    assertThat(paymentRequirements.payTo()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
-                    assertThat(paymentRequirements.maxTimeoutSeconds()).isEqualTo(60);
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_NAME)).isPresent();
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_NAME)).get().isEqualTo("USDC");
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).isPresent();
-                    assertThat(paymentRequirements.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).get().isEqualTo("2");
+        assertThat(X402V2Client.extractPaymentRequired(headers))
+                .isPresent().get()
+                .satisfies(paymentRequired -> {
+                    assertThat(paymentRequired.x402Version().equals(X402_SUPPORTED_VERSION_BY_MOGAMI.version()));
+                    assertThat(paymentRequired.resource())
+                            .isNotNull()
+                            .satisfies(paymentResource -> {
+                                assertThat(paymentResource).isNotNull();
+                                assertThat(paymentResource.url()).isEqualTo("https://api.example.com/premium-data");
+                                assertThat(paymentResource.description()).isEqualTo("Access to premium market data");
+                                assertThat(paymentResource.mimeType()).isEqualTo("application/json");
+                            });
+                    assertThat(paymentRequired.accepts())
+                            .hasSize(1)
+                            .satisfies(paymentRequirements -> {
+                                assertThat(paymentRequirements.getFirst().scheme()).isEqualTo("exact");
+                                assertThat(paymentRequirements.getFirst().network()).isEqualTo("eip155:84532");
+                                assertThat(paymentRequirements.getFirst().amount()).isEqualTo("10000");
+                                assertThat(paymentRequirements.getFirst().asset()).isEqualTo("0x036CbD53842c5426634e7929541eC2318f3dCF7e");
+                                assertThat(paymentRequirements.getFirst().payTo()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
+                                assertThat(paymentRequirements.getFirst().maxTimeoutSeconds()).isEqualTo(60);
+                                assertThat(paymentRequirements.getFirst().getExtra("name")).isPresent();
+                                assertThat(paymentRequirements.getFirst().getExtra("name")).get().isEqualTo("USDC");
+                                assertThat(paymentRequirements.getFirst().getExtra("version")).isPresent();
+                                assertThat(paymentRequirements.getFirst().getExtra("version")).get().isEqualTo("2");
+                            });
                 });
 
         // TODO Add test for invalid payment requirements (e.g., negative amount)

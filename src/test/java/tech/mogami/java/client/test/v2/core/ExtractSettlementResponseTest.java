@@ -18,22 +18,22 @@ import static tech.mogami.commons.constant.X402Constants.X402_PAYMENT_SIGNATURE_
 import static tech.mogami.commons.constant.X402Error.INSUFFICIENT_FUNDS;
 import static tech.mogami.commons.constant.network.Networks.BASE_SEPOLIA;
 
-@DisplayName("X402Client fetchSettlementResponseTest() tests")
-public class FetchSettlementResponseTest extends BaseMogamiTest {
+@DisplayName("X402Client extractSettlementResponseTest() tests")
+public class ExtractSettlementResponseTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")
     void execute() {
         // No headers ==================================================================================================
         Map<String, String> headers = Map.of();
-        Assertions.assertThat(X402V2Client.fetchSettlementResponse(headers)).isEmpty();
+        Assertions.assertThat(X402V2Client.extractSettlementResponse(headers)).isEmpty();
 
         // Some headers but without PAYMENT-RESPONSE ===================================================================
         headers = new HashMap<>(Map.of(
                 "Some-Header", "Some-Value",
                 X402_PAYMENT_SIGNATURE_HEADER, "Some-Signature"
         ));
-        assertThat(X402V2Client.fetchSettlementResponse(headers)).isEmpty();
+        assertThat(X402V2Client.extractSettlementResponse(headers)).isEmpty();
 
         // With PAYMENT-RESPONSE but the encoded value is invalid ======================================================
         headers = new HashMap<>(Map.of(
@@ -41,7 +41,7 @@ public class FetchSettlementResponseTest extends BaseMogamiTest {
                 X402_PAYMENT_RESPONSE_HEADER, "Invalid-Encoded-Value"
         ));
         Map<String, String> finalHeaders1 = headers;
-        assertThatThrownBy(() -> X402V2Client.fetchSettlementResponse(finalHeaders1))
+        assertThatThrownBy(() -> X402V2Client.extractSettlementResponse(finalHeaders1))
                 .isInstanceOf(InvalidX402HeaderException.class)
                 .hasMessageContaining("Invalid base64 payment-response header");
 
@@ -52,7 +52,7 @@ public class FetchSettlementResponseTest extends BaseMogamiTest {
         ));
         Map<String, String> finalHeaders2 = headers;
         // No error.
-        X402V2Client.fetchSettlementResponse(finalHeaders2);
+        X402V2Client.extractSettlementResponse(finalHeaders2);
 
         // With PAYMENT-RESPONSE with valid data =======================================================================
         headers = new HashMap<>(Map.of(
@@ -60,7 +60,7 @@ public class FetchSettlementResponseTest extends BaseMogamiTest {
                 X402_PAYMENT_RESPONSE_HEADER, getSampleEncodedPaymentResponse()
         ));
         Map<String, String> finalHeaders3 = headers;
-        assertThat(X402V2Client.fetchSettlementResponse(finalHeaders3))
+        assertThat(X402V2Client.extractSettlementResponse(finalHeaders3))
                 .isPresent()
                 .get()
                 .satisfies(paymentResponse -> {

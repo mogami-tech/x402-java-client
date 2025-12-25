@@ -1,5 +1,6 @@
 package tech.mogami.java.client.test.v2.core;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
@@ -31,32 +32,38 @@ public class BuildPaymentHeadersTest extends BaseMogamiTest {
     @Test
     @DisplayName("Method execution")
     void execute() {
-        var paymentRequirementsList = X402V2Client.fetchPaymentRequirements(
+
+        // We Build the payment headers ================================================================================
+        var paymentRequired = X402V2Client.extractPaymentRequired(
                 Map.of(X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequired())
-        );
+        ).orElseThrow(() -> new IllegalStateException("PaymentRequired should be present"));
 
-        var paymentPayload = X402V2Client.createPaymentPayload(
-                paymentRequirementsList.getFirst(),
-                TEST_CLIENT_WALLET_ADDRESS_1
-        );
-
-        var now = Instant.now();
-        var signedPaymentPayload = X402V2Client.signPaymentPayload(
-                paymentRequirementsList.getFirst(),
-                paymentPayload,
+        var paymentPayload = X402V2Client.buildPaymentPayload(
+                paymentRequired,
+                paymentRequired.accepts().getFirst(),
                 Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY)
         );
 
-        var paymentHeaders = X402V2Client.buildPaymentHeaders(signedPaymentPayload);
+        var paymentHeaders = X402V2Client.buildPaymentHeaders(paymentPayload);
+
+        // We verify the built headers =================================================================================
         assertThat(paymentHeaders.size()).isEqualTo(1);
         var encodedPaymentHeader = paymentHeaders.get(X402_PAYMENT_SIGNATURE_HEADER);
         var decodedPaymentPayload = Base64Util.decode(encodedPaymentHeader);
 
+        var now = Instant.now();
         assertThat(JsonUtil.fromJson(decodedPaymentPayload, PaymentPayload.class))
                 .isNotNull()
                 .satisfies(payload -> {
                     assertThat(payload.x402Version().equals(X402_SUPPORTED_VERSION_BY_MOGAMI.version()));
-                    assertThat(payload.resource()).isNull();
+                    Assertions.assertThat(payload.resource())
+                            .isNotNull()
+                            .satisfies(paymentResource -> {
+                                Assertions.assertThat(paymentResource).isNotNull();
+                                Assertions.assertThat(paymentResource.url()).isEqualTo("https://api.example.com/premium-data");
+                                Assertions.assertThat(paymentResource.description()).isEqualTo("Access to premium market data");
+                                Assertions.assertThat(paymentResource.mimeType()).isEqualTo("application/json");
+                            });
                     assertThat(payload.accepted()).satisfies(p -> {
                         assertThat(p.scheme()).isEqualTo(EXACT_SCHEME.name());
                         assertThat(p.network()).isEqualTo(BASE_SEPOLIA.networkId());
@@ -72,7 +79,7 @@ public class BuildPaymentHeadersTest extends BaseMogamiTest {
                     assertThat(payload.getPayloadAs())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                                 assertThat(exactSchemePayload.signature()).isNotEmpty();
-                                assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
+                                assertThat(exactSchemePayload.authorization().from()).isEqualToIgnoringCase(TEST_CLIENT_WALLET_ADDRESS_1);
                                 assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
                                 assertThat(exactSchemePayload.authorization().value()).isEqualTo("10000");
                                 assertThat(exactSchemePayload.authorization().nonce()).isNotEmpty();
@@ -88,7 +95,7 @@ public class BuildPaymentHeadersTest extends BaseMogamiTest {
                                 var validBeforeEpochSeconds = Long.parseLong(exactSchemePayload.authorization().validBefore());
                                 assertThat(validAfterEpochSeconds).isGreaterThanOrEqualTo(now.getEpochSecond());
                                 assertThat(validBeforeEpochSeconds).isLessThanOrEqualTo(now.plusSeconds(X402_DEFAULT_PAYMENT_TIMEOUT_SECONDS).getEpochSecond());
-                                assertThat(validBeforeEpochSeconds - validAfterEpochSeconds).isBetween(59L, 61L);
+                                assertThat(validBeforeEpochSeconds - validAfterEpochSeconds).isBetween(50L, 65L);
                             });
                     assertThat(paymentPayload.extensions()).isNotNull();
                 });

@@ -21,32 +21,36 @@ import static tech.mogami.commons.payment.schemes.Schemes.EXACT_SCHEME;
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_NAME;
 import static tech.mogami.commons.payment.schemes.exact.ExactSchemeConstants.EXACT_SCHEME_PARAMETER_VERSION;
 
-@DisplayName("X402Client SignPaymentPayloadTest() tests")
-public class SignPaymentPayloadTest extends BaseMogamiTest {
+@DisplayName("X402Client buildPaymentPayload() tests")
+public class BuildPaymentPayloadTest extends BaseMogamiTest {
 
     @Test
     @DisplayName("Method execution")
     void execute() {
-        var paymentRequirementsList = X402V2Client.fetchPaymentRequirements(
+        var paymentRequired = X402V2Client.extractPaymentRequired(
                 Map.of(X402_PAYMENT_REQUIRED_HEADER, getSampleEncodedPaymentRequired())
-        );
+        ).orElseThrow(() -> new IllegalStateException("PaymentRequired should be present"));
 
-        var paymentPayload = X402V2Client.createPaymentPayload(
-                paymentRequirementsList.getFirst(),
-                TEST_CLIENT_WALLET_ADDRESS_1
+        var paymentPayload = X402V2Client.buildPaymentPayload(
+                paymentRequired,
+                paymentRequired.accepts().getFirst(),
+                Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY)
         );
 
         var now = Instant.now();
-        var signedPaymentPayload = X402V2Client.signPaymentPayload(
-                paymentRequirementsList.getFirst(),
-                paymentPayload,
-                Credentials.create(TEST_CLIENT_WALLET_ADDRESS_1_PRIVATE_KEY)
-        );
-        assertThat(signedPaymentPayload)
+
+        assertThat(paymentPayload)
                 .isNotNull()
                 .satisfies(payload -> {
                     assertThat(payload.x402Version().equals(X402_SUPPORTED_VERSION_BY_MOGAMI.version()));
-                    assertThat(payload.resource()).isNull();
+                    assertThat(payload.resource())
+                            .isNotNull()
+                            .satisfies(paymentResource -> {
+                                assertThat(paymentResource).isNotNull();
+                                assertThat(paymentResource.url()).isEqualTo("https://api.example.com/premium-data");
+                                assertThat(paymentResource.description()).isEqualTo("Access to premium market data");
+                                assertThat(paymentResource.mimeType()).isEqualTo("application/json");
+                            });
                     assertThat(payload.accepted()).satisfies(p -> {
                         assertThat(p.scheme()).isEqualTo(EXACT_SCHEME.name());
                         assertThat(p.network()).isEqualTo(BASE_SEPOLIA.networkId());
@@ -62,7 +66,7 @@ public class SignPaymentPayloadTest extends BaseMogamiTest {
                     assertThat(payload.payload())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                                 assertThat(exactSchemePayload.signature()).isNotEmpty();
-                                assertThat(exactSchemePayload.authorization().from()).isEqualTo(TEST_CLIENT_WALLET_ADDRESS_1);
+                                assertThat(exactSchemePayload.authorization().from()).isEqualToIgnoringCase(TEST_CLIENT_WALLET_ADDRESS_1);
                                 assertThat(exactSchemePayload.authorization().to()).isEqualTo("0x209693Bc6afc0C5328bA36FaF03C514EF312287C");
                                 assertThat(exactSchemePayload.authorization().value()).isEqualTo("10000");
                                 assertThat(exactSchemePayload.authorization().nonce()).isNotEmpty();
