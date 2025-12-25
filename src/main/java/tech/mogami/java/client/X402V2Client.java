@@ -40,6 +40,7 @@ public class X402V2Client {
      *
      * @param headers The headers to fetch the PaymentRequired from.
      * @return An Optional containing the PaymentRequired if present.
+     * @throws InvalidX402HeaderException if the extracted PaymentRequired has an unsupported x402 version.
      */
     public Optional<PaymentRequired> extractPaymentRequired(final Map<String, String> headers) {
         return Optional.ofNullable(getHeaderIgnoreCase(headers, X402_PAYMENT_REQUIRED_HEADER))
