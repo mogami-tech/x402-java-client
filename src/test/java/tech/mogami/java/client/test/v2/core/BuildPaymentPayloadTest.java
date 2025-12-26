@@ -38,7 +38,6 @@ public class BuildPaymentPayloadTest extends BaseMogamiTest {
         );
 
         var now = Instant.now();
-
         assertThat(paymentPayload)
                 .isNotNull()
                 .satisfies(payload -> {
