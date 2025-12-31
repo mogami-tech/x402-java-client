@@ -76,7 +76,7 @@ public class BuildPaymentHeadersTest extends BaseMogamiTest {
                         assertThat(p.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).isPresent();
                         assertThat(p.getExtra(EXACT_SCHEME_PARAMETER_VERSION)).get().isEqualTo("2");
                     });
-                    assertThat(payload.getPayloadAs())
+                    assertThat(payload.getTypedPayload())
                             .isInstanceOfSatisfying(ExactSchemePayload.class, exactSchemePayload -> {
                                 assertThat(exactSchemePayload.signature()).isNotEmpty();
                                 assertThat(exactSchemePayload.authorization().from()).isEqualToIgnoringCase(TEST_CLIENT_WALLET_ADDRESS_1);
