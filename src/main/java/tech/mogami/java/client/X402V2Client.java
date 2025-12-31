@@ -97,6 +97,16 @@ public class X402V2Client {
     }
 
     /**
+     * Builds a payment header from the given signed PaymentPayload.
+     *
+     * @param signedPaymentPayload The signed payment payload.
+     * @return The payment header as a String.
+     */
+    public String buildPaymentHeader(final PaymentPayload signedPaymentPayload) {
+        return X402HeaderUtil.encodePaymentPayload(signedPaymentPayload);
+    }
+
+    /**
      * Builds payment headers from the given signed PaymentPayload.
      *
      * @param signedPaymentPayload The signed payment payload.
@@ -105,7 +115,7 @@ public class X402V2Client {
     public Map<String, String> buildPaymentHeaders(final PaymentPayload signedPaymentPayload) {
         return Map.of(
                 X402_PAYMENT_SIGNATURE_HEADER,
-                X402HeaderUtil.encodePaymentPayload(signedPaymentPayload)
+                buildPaymentHeader(signedPaymentPayload)
         );
     }
 
