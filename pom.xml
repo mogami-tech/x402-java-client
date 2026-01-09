@@ -57,20 +57,20 @@
         <skip.integration.tests>true</skip.integration.tests>
 
         <!-- Mogami -->
-        <mogami.commons.version>1.2.1-v2-SNAPSHOT</mogami.commons.version>
+        <mogami.commons.version>1.2.1-SNAPSHOT</mogami.commons.version>
 
         <!-- Boilerplate & Utils -->
         <lombok.version>1.18.42</lombok.version>
         <jspecify.version>1.0.0</jspecify.version>
 
         <!-- Tests -->
-        <junit-jupiter.version>6.0.1</junit-jupiter.version>
+        <junit-jupiter.version>6.0.2</junit-jupiter.version>
         <assertj.version>3.27.6</assertj.version>
         <okhttp.version>4.12.0</okhttp.version>
 
         <!-- Maven plugins -->
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
-        <maven.puppycrawl.checkstyle.version>12.3.0</maven.puppycrawl.checkstyle.version>
+        <maven.puppycrawl.checkstyle.version>13.0.0</maven.puppycrawl.checkstyle.version>
         <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <maven.compiler.plugin.version>3.14.1</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.4</maven.surefire.plugin.version>
@@ -83,7 +83,7 @@
         <maven.gitflow-maven-plugin.version>1.21.0</maven.gitflow-maven-plugin.version>
         <maven.gpg-plugin.version>3.2.8</maven.gpg-plugin.version>
         <maven.deploy-plugin.version>3.1.4</maven.deploy-plugin.version>
-        <maven.central-publishing-maven-plugin.version>0.9.0</maven.central-publishing-maven-plugin.version>
+        <maven.central-publishing-maven-plugin.version>0.10.0</maven.central-publishing-maven-plugin.version>
     </properties>
 
     <!-- Dependencies ============================================================================================== -->

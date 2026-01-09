@@ -1,4 +1,4 @@
-package tech.mogami.java.client.test.v2.integration;
+package tech.mogami.java.client.test.integration;
 
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;

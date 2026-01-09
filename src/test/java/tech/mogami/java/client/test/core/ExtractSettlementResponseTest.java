@@ -1,4 +1,4 @@
-package tech.mogami.java.client.test.v2.core;
+package tech.mogami.java.client.test.core;
 
 
 import org.assertj.core.api.Assertions;

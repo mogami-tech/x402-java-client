@@ -1,4 +1,4 @@
-package tech.mogami.java.client.test.v2.core;
+package tech.mogami.java.client.test.core;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -112,8 +112,6 @@ public class ExtractPaymentRequiredTest extends BaseMogamiTest {
                                 assertThat(paymentRequirements.getFirst().getExtra("version")).get().isEqualTo("2");
                             });
                 });
-
-        // TODO Add test for invalid payment requirements (e.g., negative amount)
     }
 
 }
