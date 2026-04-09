@@ -28,7 +28,6 @@ public class BazaarTest {
 
     /** OkHttpClient instance for making HTTP requests */
     private static final OkHttpClient CLIENT = new OkHttpClient();
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
     @DisplayName("Extract BazaarExtension from cookies4humans")

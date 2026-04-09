@@ -132,7 +132,7 @@ public class X402V2Client {
         if (extensions == null || !extensions.containsKey("bazaar")) {
             return Optional.empty();
         }
-        return Optional.ofNullable(JsonUtil.convertValue(extensions.get("bazaar"), BazaarExtension.class));
+        return Optional.of(JsonUtil.convertValue(extensions.get("bazaar"), BazaarExtension.class));
     }
 
     /**

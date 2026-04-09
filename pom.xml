@@ -57,7 +57,7 @@
         <skip.integration.tests>true</skip.integration.tests>
 
         <!-- Mogami -->
-        <mogami.commons.version>2.0.1-SNAPSHOT</mogami.commons.version>
+        <mogami.commons.version>2.0.1</mogami.commons.version>
 
         <!-- Boilerplate & Utils -->
         <lombok.version>1.18.44</lombok.version>
