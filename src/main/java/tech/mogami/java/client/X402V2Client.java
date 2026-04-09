@@ -13,7 +13,9 @@ import tech.mogami.commons.exception.InvalidX402HeaderException;
 import tech.mogami.commons.payment.PaymentPayload;
 import tech.mogami.commons.payment.PaymentRequired;
 import tech.mogami.commons.payment.PaymentRequirements;
+import tech.mogami.commons.payment.extensions.bazaar.BazaarExtension;
 import tech.mogami.commons.payment.schemes.exact.ExactSchemePayload;
+import tech.mogami.commons.util.JsonUtil;
 import tech.mogami.commons.util.NonceUtil;
 import tech.mogami.commons.util.X402HeaderUtil;
 
@@ -117,6 +119,20 @@ public class X402V2Client {
                 X402_PAYMENT_SIGNATURE_HEADER,
                 buildPaymentHeader(signedPaymentPayload)
         );
+    }
+
+    /**
+     * Extract the BazaarExtension from the given PaymentRequired.
+     *
+     * @param paymentRequired The PaymentRequired containing potential bazaar extension data.
+     * @return An Optional containing the BazaarExtension if present.
+     */
+    public Optional<BazaarExtension> extractBazaarExtension(final PaymentRequired paymentRequired) {
+        Map<String, Object> extensions = paymentRequired.extensions();
+        if (extensions == null || !extensions.containsKey("bazaar")) {
+            return Optional.empty();
+        }
+        return Optional.of(JsonUtil.convertValue(extensions.get("bazaar"), BazaarExtension.class));
     }
 
     /**
